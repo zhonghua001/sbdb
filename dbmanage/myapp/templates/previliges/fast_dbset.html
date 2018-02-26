@@ -1,0 +1,244 @@
+{% extends "include/base.html" %}
+{% load static %}
+{% block title %}
+    <title>快速创建DB</title>
+{% endblock %}
+{% block name %}
+    快速创建DB
+
+
+    <br>
+    {% if result %}<span style="color: red"> {{ result }}</span> {% endif %}
+{% endblock %}
+{%block db_content%}
+    {% if info %}
+        <br>
+        <br>
+        <strong> <span style="color:red">{{ info }}</span></strong>
+    {% endif %}
+
+
+<div class="col-md-9 text-left">
+<form role="form" method='post'>
+
+ {% csrf_token %}
+<input name="authenticity_token" type="hidden" value="{{ token }}">
+     <div class="box box-info">
+         <div class="box-header with-border">
+              <h3 class="box-title">Instance</h3>
+         </div>
+     <div class="box-body">
+         <div class="form-group col-sm-3">
+               <strong>CHOOSE HOST GROUP</strong> </br>
+                    <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host.ip|default:0 }}')" class="form-control col-md-5" style="width: 200px ;" name = "select_group">
+                        <option value ="" selected disabled >---Select Host Group---</option>
+                        {% for group in host_group %}
+                            {% if group.id == select_group %}
+                                <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                            {% else %}
+                                <option value ="{{ group.id }}">{{ group.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+           </div>
+            <div class="form-group col-sm-9">
+                <strong>&nbsp;&nbsp;CHOOSE HOST</strong> <br>
+                <select id="select_host" onchange='changeHost(this.value)' style="width: auto" class="form-control col-md-5" name = "select_host">
+                    <option  value ="" selected disabled >--Select Host---</option>
+{#                    {% for key,value in host_list.items %}#}
+{#                        {% if key == select_host %}#}
+{#                                <option selected="selected" value ="{{ key }}">{{ key }}#}
+{#                                    {% if value|length == 0 %}#}
+{#                                        无账号#}
+{#                                    {% else %}#}
+{#                                       已有账号列表: {{ value }}#}
+{#                                    {% endif %}#}
+{#                                </option>#}
+{#                        {% else %}#}
+{#                            <option  value ="{{ key }}">{{ key }}#}
+{#                                {% if value|length == 0 %}#}
+{#                                    无账号#}
+{#                                   {% else %}#}
+{#                                   已有账号列表: {{ value }}#}
+{#                                   {% endif %}#}
+{#                            </option>#}
+{#                        {% endif %}#}
+{#                    {% endfor %}#}
+
+                </select>
+
+           </div>
+             {% if message %}
+
+                  <h1><strong style="color: red">{{ message }}</strong> </h1>
+
+                {% endif %}
+
+            <div class="form-group  col-sm-6  ">
+                <br>
+                &nbsp;{{ form.comment }}
+                    <br>
+                {{ form.port }} <span style="color: red">{{ form.errors.port.0 }}</span>
+                <br>
+                <select id='db_type' class="form-control col-md-3"  name="db_type">
+                <option selected disabled value="no">--DB TYPE--</option>
+                    {% if db_type is not None %}
+                        {% if db_type == 'mysql' %}
+                            <option value="mysql" selected="selected">MySQL</option>
+                            <option value="mongodb"  >Mongodb</option>
+                        {% else %}
+                            <option value="mongodb"  selected="selected">Mongodb</option>
+                            <option value="mysql" >MySQL</option>
+                        {% endif %}
+                    {% else %}
+                        <option value="mysql" >MySQL</option>
+                        <option value="mongodb"  >Mongodb</option>
+                {% endif %}
+                </select>
+{#                {% if db_type is None %}<span style="color:red">Must be choice db type</span>{% endif %}#}
+
+             </div>
+     </div>
+     </div>
+
+    <div class="box box-info">
+        <div class="box-header with-border">
+              <h3 class="box-title">DB_ACCOUNT FOR NORMAL USER(EXP:query,exec)</h3>
+        </div>
+        <div class="box-body">
+            <div class="form-group">
+                  <label for="normal_db_account" class="col-sm-3 control-label text-left">Normal Account:</label>
+
+                  <div class="col-sm-9">
+                      {{ form.normal_db_account }}<span style="color: red">{{ form.errors.normal_db_account}}</span>
+
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="normal_db_password" class="col-sm-3 control-label">Normal Password:</label>
+                  <div class="col-sm-9">
+                                {{ form.normal_db_password }}<span style="color: red">{{ form.errors.normal_db_password }}</span>
+{#                                     <span style="color: red">#}
+{#                                       {% if form|all_errors %}#}
+{#                                             {{ form|all_errors }}#}
+{#                                        {% endif %}#}
+{#                                    </span>#}
+
+                 </div>
+                </div>
+
+                <div class="form-group">
+                      <label for="normal_db_password_again" class="col-sm-3 control-label">Normal Password:</label>
+                      <div class="col-sm-9">
+                          {{ form.normal_db_password_again }}<span style="color: red">{{ form.errors.normal_db_password_again }}</span>
+                     </div>
+                </div>
+
+        </div>
+
+ <div class="box box-info">
+        <div class="box-header with-border">
+              <h3 class="box-title">DB_ACCOUNT FOR ADMIN USER(EXP:reload,process,super,replication client...)</h3>
+        </div>
+        <div class="box-body">
+
+             <div class="form-group">
+                 <label for="admin_db_account" class="col-sm-3 control-label">Admin Account</label>
+                 <div class="col-sm-9">
+                        {{ form.admin_db_account }}<span style="color: red">{{ form.admin_db_account.errors }}</span>
+                 </div>
+             </div>
+
+            <div class="form-group">
+                <label for="admin_db_password" class="col-sm-3 control-label">Admin Password</label>
+                <div class="col-sm-9">
+                    {{ form.admin_db_password }}<span style="color: red">{{ form.admin_db_password.errors }}</span>
+                </div>
+            </div>
+
+             <div class="form-group">
+                <label for="admin_db_password_again" class="col-sm-3 control-label">Admin Password:</label>
+                <div class="col-sm-9">
+                    {{ form.admin_db_password_again }}<span style="color: red">{{ form.admin_db_password_again.errors }}</span>
+                </div>
+            </div>
+
+             <div class="box-footer">
+                   {% if  form.non_field_errors %}
+                        <br>
+                            <h1><span style="color: red">{{ form.non_field_errors }}</span></h1>
+                       <br>
+
+                    {% endif %}
+                <button type="submit" name='create' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-info" >创建</button>
+                 <button type="button" name='back' onclick='javascrtpt:window.location.href="{% url 'dbmanage'  %}"'  class="btn btn-info" >返回</button>
+
+              </div>
+            </div>
+ </div>
+    </div>
+</form>
+
+
+        <!-- /.modal -->
+</div>
+<script>
+
+    function changeHost(str) {
+{#        var host = $('#select_host').find("option:selected").val();#}
+{#        console.log(str)#}
+
+        $.ajax({ url: "/dbmanage/get_hostdetail/", data: {'selected_host':str}, dataType: 'json',type: 'GET',success: function(ret){
+
+            $("#db_type").find("option:selected").attr("selected",false);
+            if(ret.result === 1){
+
+
+                $("#id_comment").val(ret.comments);
+                $("#id_port").val(ret.port);
+                $("#db_type").find("option[value='"+ret.db_type+"']").attr("selected",true);
+{#                $("#db_type").find("option:selected").val(ret.db_type);#}
+
+            }
+            else{
+                $("#id_comment").val('');
+                $("#id_port").val('');
+                 $("#db_type").find("option[value='no']").attr("selected",true);
+{#                $("#db_type").find("option:selected").val('no');#}
+
+            }
+
+
+      }});
+
+
+    }
+
+
+
+    </script>
+
+
+
+
+<script src="{% static 'myapp/select_group.js' %}"></script>
+
+<script>
+    var h = '';
+    if (({{  select_host.id|default:0 }}) > 0 && ({{ select_host.group_id|default:0 }}) == 0){
+        h = '{{ select_host.id }}';
+    }
+    else if (({{ select_host.group_id|default:0 }}) >0){
+        h = '{{ select_host.ip }}';
+    }
+    else {
+        h = 0
+    }
+
+    change_group(-2,{{ select_group|default:0 }},h);
+
+</script>
+
+{% endblock %}
+

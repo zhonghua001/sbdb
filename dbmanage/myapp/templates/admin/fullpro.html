@@ -1,0 +1,78 @@
+{#{% include "include/pagejump/pagebutton.html" %}#}
+{##}
+{#<link rel="stylesheet" href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}">#}
+{#<script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>#}
+{#        <script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>#}
+<table id="mytable" class="table table-condensed" border="1">
+    <thead>
+        <tr class="danger">
+            {% for colname in collist %}
+                <th>{{ colname }}</th>
+            {% endfor %}
+            <th class="info"> <span onclick="choose_all()">点击全选</span> </th>
+        </tr>
+    </thead>
+{#    <tbody  >#}
+{#        {% for item in data_list %}#}
+{#        <tr>#}
+{#            {% for item_detail in item %}#}
+{#                <td> <pre>{{ item_detail }}</pre></td>#}
+{#            {% endfor %}#}
+{#            <td><input type="checkbox" size="100" name="choosedlist" value={{ item.0 }}></td>#}
+{#        </tr>#}
+{#        {% endfor %}#}
+{#    </tbody>#}
+</table>
+
+{% if event == 'kill_list' or event == 'fullpro' or event == 'showactive' %}
+    <button type="button" name='kill_list' onclick="query('kill_list')" class="btn btn-success" value="1">KILL SELECTED</button >
+{% endif %}
+
+<script>
+
+
+$('#mytable').DataTable({
+        "columnDefs": [
+            {"orderable": false, "targets": [0,7,8,9,10]}
+        ],
+        language: {
+                        lengthMenu: '<select class="form-control input-xsmall">' + '<option value="5">5</option>' + '<option value="10">10</option>' + '<option value="20">20</option>' + '<option value="30">30</option>' + '<option value="40">40</option>' + '<option value="50">50</option>' + '</select>条记录',//左上角的分页大小显示。
+                        search: '<span class="label label-primary" style="font-size: 100%;font-weight:0;">搜索：</span>',//右上角的搜索文本，可以写html标签
+
+                        paginate: {//分页的样式内容。
+                        previous: "上一页",
+                        next: "下一页",
+                        first: "第一页",
+                        last: "最后"
+                    },
+
+                    zeroRecords: "没有内容",//table tbody内容为空时，tbody的内容。
+                    //下面三者构成了总体的左下角的内容。
+                    info: "总共_PAGES_ 页，显示第_START_ 到第 _END_ ，筛选之后得到 _TOTAL_ 条，初始_MAX_ 条 ",//左下角的信息显示，大写的词为关键字。
+                    infoEmpty: "0条记录",//筛选为空时左下角的显示。
+                    infoFiltered: ""//筛选之后的左下角筛选提示，
+                    },
+                paging: true,
+                pagingType: "full_numbers",//分页样式的类型
+
+{#                    data: dataSet,#}
+                    columns: [
+                        { title: "a"},
+                        { title: "DBNameID" },
+                        { title: "IP" },
+                        { title: "Port." },
+                        { title: "Database" },
+                        { title: "Explain" },
+                        { title: "DBRole" }
+
+                    ]})
+                    .column( '1:visible' )
+                    .order( 'asc' )
+                    .draw();
+                $("#example1_filter input[type=search]").css({ width: "300px" });//右上角的默认搜索文本框，不写这个就超出去了。
+
+
+
+
+
+</script>

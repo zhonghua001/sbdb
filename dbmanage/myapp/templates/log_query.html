@@ -1,0 +1,227 @@
+{% extends "include/base.html" %}
+{% block title %}
+    {% load static %}
+    <title>LOG_QUERY</title>
+{% endblock %}
+{% block name %}
+         <link rel="stylesheet" href="{% static 'plugins/iCheck/all.css' %}">
+        <link rel="stylesheet" href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}">
+        <script src="{% static 'plugins/iCheck/icheck.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+        <script src="{% static 'layer/layer.js' %}"></script>
+    欢迎使用操作日志查询功能
+{% endblock %}
+{%block db_content%}
+    <table >
+        <tr>
+            <td>
+                </br>
+                </br>
+
+                <form role="form" method='post'>
+                    {% csrf_token %}
+                    CHOOSE:</br>
+
+  <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host|default:0 }}')" class="form-control col-md-12"  name = "select_group">
+                                <option value ="" selected disabled >---Select Host Group---</option>
+                                    {% for group in host_group %}
+                                        {% if group.id == select_group %}
+                                            <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                        {% else %}
+                                            <option value ="{{ group.id }}">{{ group.name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                            </select>
+
+                            <select  id="select_host" onchange="change_host(1)" class="form-control col-md-12" name = "ins_set">
+                                <option value ="" selected disabled >---Select Host ---</option>
+                            </select>
+
+
+                    </br>
+                    选择操作类型:</br>
+                    <select class="form-control col-md-1" name = "optype">
+                        {% for obj in optype_list %}
+                            {% if obj == optype %}
+                            <option selected value ="{{ obj }}">{{ obj }}</option>
+                            {% else %}
+                            <option value ="{{ obj }}">{{ obj }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    </br>
+
+                    起始时间：{{ form.begin }}
+                    结束时间：{{ form.end }}
+                    <button type="submit"  class="btn btn-primary">提交</button >
+
+                </form>
+            </td>
+            <td>
+                <div class="col-md-12">
+                    <h3>注意事项:</h3>
+                    <p> 1. 设置结束时间应大于开始时间，否则查询以结束时间为准</p>
+                    <p> 2. 输出结果默认按时间倒序</p>
+                    <p> 3. 通过"任务管理界面"执行的语句sqltype为incept</p>
+                </div>
+            </td>
+        </tr>
+
+    </table>
+    {% if datalist %}
+        {% include "include/pagejump/pagebutton.html" %}
+    {% endif %}
+    <table id="mytable" class="table table-condensed table-bordered" border="1">
+        <thead>
+        <tr class="danger">
+            <th>USER</th>
+            <th>DBTAG</th>
+            <th>DBNAME</th>
+            <th>SQLTEXT</th>
+            <th>CREATE_TIME</th>
+            <th>LOGIN_IP</th>
+            <th>LOGIN_TIME</th>
+            <th>SQLTYPE</th>
+        </tr>
+        </thead>
+        <tbody  >
+        {% for item in data %}
+            <tr>
+                <td> {{ item.user }}</td>
+                <td> {{ item.dbtag }}</td>
+                <td> {{ item.dbname }}</td>
+                <td> {{ item.sqltext }}</td>
+                <td> {{ item.create_time|date:"Y-m-d H:i:s" }}</td>
+                <td> {{ item.ipaddr }}</td>
+                <td> {{ item.login_time|date:"Y-m-d H:i:s" }}</td>
+                <td>{{ item.sqltype }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <script type="text/javascript">
+        //jeDate.skin('gray');
+        jeDate({
+            dateCell:"#id_begin",
+            format:"YYYY-MM-DD hh:mm:ss",
+            isinitVal:true,
+            isTime:true, //isClear:false,
+            minDate:"2014-09-19 00:00:00",
+            okfun:function(val){alert(val)}
+        })
+        jeDate({
+            dateCell:"#id_end",
+            format:"YYYY-MM-DD hh:mm:ss",
+            isinitVal:true,
+            isTime:true, //isClear:false,
+            minDate:"2014-09-19 00:00:00",
+            okfun:function(val){alert(val)}
+        })
+    </script>
+    {% block script %}
+    {% include "include/pagejump/pagejump.html" %}
+{% endblock %}
+
+    <script>
+function change_host(flag) {
+
+
+    var select_host = $("#select_host");
+    var instance_id = select_host.val();
+
+    $("#id_form_write").empty();
+    $("#id_form_write_write").empty();
+    $("#id_form_all").empty();
+
+    $("#collapseOne").collapse('hide');
+    $("#collapseTwo").collapse('hide');
+    $("#collapseThree").collapse('hide');
+    if (instance_id === null){
+        instance_id = "{{ select_host }}"
+    }
+
+    $.getJSON('/dbmanage/log_query/', {'instance_id': instance_id}, function (ret) {
+
+        $.each(ret, function(key,value){
+            v = value.db_account_id
+            var text = value.db_name+' ['+value.db_tag+']';
+
+                var html =  '<div class="radio"> \
+                             <label> \
+                             <input type="radio" name="optionsRadios" id="optionsRadios'+key+'" value="'+v+':'+value.db_name+'" > \
+                               '+text+'\
+                            </label> \
+                          </div>'
+
+            $('#id_form_'+value.db_account_role).append(html);
+        });
+        var select_db_name = "{{ db_name|default_if_none:'0' }}"
+        var select_db_account_id = "{{ db_account.id|default_if_none:'0' }}"
+        console.log(select_db_name,select_db_account_id)
+        if ( select_db_name !== 0 && select_db_account_id !== 0 && flag === -1){
+            var r = document.getElementsByName('optionsRadios')
+            for (var i=0;i<r.length;i++){
+                if ($("#"+r[i].id).val() === select_db_account_id+':'+select_db_name){
+                     $("#"+r[i].id).attr("checked",true);
+                     $("#"+r[i].id).parent().parent().parent().parent().parent().collapse('show');
+                }
+            }
+
+        }else{
+            var d =  document.getElementsByName('optionsRadios');
+            for (var i=0;i<1;i++){
+               $("#"+d[i].id).attr("checked",true);
+               $("#"+d[i].id).parent().parent().parent().parent().parent().collapse('show');
+                console.log()
+
+        }
+        }
+
+    })
+}
+
+
+function change_group(flag,selected_group,selected_host) {
+
+    var host_group = selected_group;
+    if (flag == -1) {
+        host_group = $("#id_select_group option:selected").val();
+    }
+{#    console.log(selected_group,selected_host)#}
+    var select_host = $("#select_host");
+    $(select_host).empty();
+    $(select_host).append('<option  id="select_host" value ="" selected disabled >---Select Host---</option>');
+
+    $.ajax({
+        url: '/dbmanage/log_query/',
+        data: {'host_group': host_group},
+        success: function (ret) {
+            $.each(ret ,function(key,value){
+
+                var id = value.id;
+                var text = value.ip+":"+value.port+' '+value.explain;
+                if (id === selected_host){$(select_host).append('<option selected  value ="'+id+'" >'+text+'</option>')}
+                else{$(select_host).append('<option  value ="'+id+'" >'+text+'</option>')}
+            })
+        }
+    })
+}
+
+
+    </script>
+
+
+    <script>
+
+    change_group(-2,{{ select_group|default:0 }},{{ select_host }});
+    change_host(-1)
+    </script>
+
+     <script>
+        $(document).ready(function(){
+            $('#mytable').DataTable();
+        });
+        </script>
+{% endblock %}

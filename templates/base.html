@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+This is a starter template page. Use this page to start your new project from
+scratch. This page gets rid of all links and provides the needed markup only.
+-->
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>AdminSet</title>
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    {% include 'link_css.html' %}
+    {% include 'head_script.html' %}
+    {% block self_head_css_js %}
+
+
+    {% endblock %}
+    <script>
+        $(document).ready(function(){
+        $('.loading').fadeOut();
+        });
+    </script>
+</head>
+
+<style>
+.open>.dropdown-menu {
+    display: block;
+}
+</style>
+<body id='id_body' class="hold-transition sidebar-mini sidebar-mini skin-purple" style="height: auto; min-height: 100%;">
+
+{# <body class="sidebar-mini wysihtml5-supported skin-blue" style="height: auto; min-height: 100%;">#}
+        <div class="loading"></div>
+        <div class="wrapper">
+
+      <!-- Main Header -->
+        {% include temp_name %}
+
+        <script type="text/javascript">
+            $('.loading').animate({'width':'10%'},50);  //第一个进度节点
+        </script>
+      <!-- Left side column. contains the logo and sidebar -->
+        {% include 'main-sidebar.html' %}
+
+        <script type="text/javascript">
+            $('.loading').animate({'width':'25%'},50);  //第一个进度节点
+        </script>
+
+      <!-- Content Wrapper. Contains page content -->
+        {% block content %}{% endblock %}
+      <!-- /.content-wrapper -->
+        <script type="text/javascript">
+            $('.loading').animate({'width':'60%'},50);  //第一个进度节点
+        </script>
+      <!-- Main Footer -->
+          {% include 'footer.html' %}
+        <script type="text/javascript">
+            $('.loading').animate({'width':'100%'},50);  //第一个进度节点
+        </script>
+      <!-- Control Sidebar -->
+      {% include 'control-sidebar.html' %}
+
+  <!-- /.control-sidebar -->
+  <!-- Add the sidebar's background. This div must be placed
+       immediately after the control sidebar -->
+      <div class="control-sidebar-bg"></div>
+    </div>
+<!-- ./wrapper -->
+
+</body>
+<script>
+    var sidebar_collapse = sessionStorage.getItem("sidebar_collapse");
+
+    if (sidebar_collapse === '1' ){
+
+        $("#id_body").addClass('sidebar-collapse')
+    }
+    else{
+         $("#id_body").removeClass('sidebar-collapse')
+    }
+
+    $('.sidebar-toggle').click(function(){
+
+        if ($("#id_body").hasClass('sidebar-collapse')){
+
+        sessionStorage.setItem('sidebar_collapse',0)
+    }
+    else {sessionStorage.setItem('sidebar_collapse',1)}
+    })
+
+$(document).ready(function(){ dropdownOpen()}); //调用 }); /** * 鼠标划过就展开子菜单，免得需要点击才能展开 */
+    function dropdownOpen() {
+        var $dropdownLi = $('li.dropdown');
+        $dropdownLi.mouseover(function() { $(this).addClass('open'); }).mouseout(function() {
+            $(this).removeClass('open');
+        });
+    }
+
+
+{#if(window.localStorage){     alert("浏览支持localStorage") }else{    alert("浏览暂不支持localStorage") } //或者 if(typeof window.localStorage == 'undefined'){ 	alert("浏览暂不支持localStorage") }#}
+</script>
+{% block self_footer_js %} {% endblock %}
+</html>

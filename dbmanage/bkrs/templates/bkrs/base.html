@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load static %}
+{% block self_head_css_js %}
+{#    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">#}
+    <link href="{% static 'css/metisMenu.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/dataTables.bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/dataTables.responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'css/admin.css' %}" rel="stylesheet">
+    <link href="{% static 'css/backmanage.css' %}" rel="stylesheet">
+{#    <link href="{% static 'css/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet" type="text/css">#}
+{#    <script src="{% static 'js/jquery.min.js' %}"></script>#}
+{#    <script src="{% static 'js/bootstrap.min.js' %}"></script>#}
+    <script src="{% static 'js/metisMenu.min.js' %}"></script>
+    <script src="{% static 'js/admin.js' %}"></script>
+    <script src="{% static 'layer/layer.js' %}"></script>
+{% endblock %}
+
+<style>
+    table {
+        table-layout: fixed;
+    }
+td{
+width:100%;
+word-break:keep-all;/* 不换行 */
+white-space:nowrap;/* 不换行 */
+overflow:hidden;/* 内容超出宽度时隐藏超出部分的内容 */
+text-overflow:ellipsis;/* 当对象内文本溢出时显示省略标记(...) ；需与overflow:hidden;一起使用。*/
+}
+
+th {
+background-color: #189AD6;
+color: red; }
+{#    .layui-layer {#}
+{#word-wrap: break-word;#}
+{#word-break: break-all; }#}
+</style>
+
+    {% block content %}
+
+        <div class="content-wrapper" >
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            {% block name %}
+                <script>
+                   function open_page(url){
+                       window.location.href=url
+                   }
+                </script>
+               <div class="bs-example bs-example-tabs" data-example-id="togglable-tabs">
+                <ul id="myTabs" class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="{% if index_flag  %} active {% endif %}"><a href="#"  onclick="open_page('{% url 'bkrs' %}')"  aria-expanded="false"><i class="glyphicon glyphicon-home"></i>备份管理统计</a></li>
+                    <li role="presentation" class="dropdown {% if backarchives_flag or backfailed_flag  %} active {% endif %}">
+                       <a href="#" id="myTabDrop1" class="dropdown-toggle" data-toggle="dropdown" aria-controls="myTabDrop1-contents" aria-expanded="false"><i class="glyphicon glyphicon-th"></i>备份管理 <span class="caret"></span></a>
+                         <ul class="dropdown-menu" aria-labelledby="myTabDrop1" id="myTabDrop1-contents">
+                           <li class=""><a href="#" onclick="open_page('{% url 'backarchives' %}')"   data-toggle="tab"  aria-expanded="false">最新备份列表</a></li>
+                           <li><a href="#" onclick="open_page('{% url 'backfailed' %}')"  aria-expanded="false">备份失败列表</a></li>
+                           <li><a href="#" onclick="open_page('{% url 'backup_statics' %}')"  aria-expanded="false">备份统计信息</a></li>
+                        </ul>
+                  </li>
+                  <li role="presentation" class="dropdown {% if customer_flag or customer_add_flag   %} active {% endif %} ">
+                    <a href="#" id="myTabDrop1" class="dropdown-toggle" data-toggle="dropdown" aria-controls="myTabDrop1-contents" aria-expanded="false"><i class="fa fa-database"></i>主机管理 <span class="caret"></span></a>
+                    <ul class="dropdown-menu" aria-labelledby="myTabDrop1" id="myTabDrop1-contents">
+                      <li class=""><a href="#" onclick="open_page('{% url 'customer' %}')"   aria-expanded="false">主机列表</a></li>
+                      <li><a href="#" role="tab" onclick="open_page('{% url 'customer_add' %}')"   aria-expanded="false">添加主机</a></li>
+                    </ul>
+                  </li>
+
+                  <li role="presentation" class="dropdown {% if backnode_flag or add_backnode_flag   %} active {% endif %}">
+                    <a href="#" id="myTabDrop1" class="dropdown-toggle" data-toggle="dropdown" aria-controls="myTabDrop1-contents" aria-expanded="false"><i class="fa fa-soundcloud"></i>节点管理 <span class="caret"></span></a>
+                    <ul class="dropdown-menu" aria-labelledby="myTabDrop1" id="myTabDrop1-contents">
+                      <li class=""><a href="#" onclick="open_page('{% url 'backnode' %}')"   aria-expanded="false">备份节点</a></li>
+                      <li><a href="#" onclick="open_page('{% url 'add_backnode' %}')"   aria-expanded="false">添加节点</a></li>
+                    </ul>
+                  </li>
+                     <li role="presentation" class="dropdown {% if set_config_flag or help_flag   %} active {% endif %}">
+                        <a href="#" id="myTabDrop1" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="glyphicon glyphicon-cog"></i>系统参数 <span class="caret"></span></a>
+                        <ul class="dropdown-menu" aria-labelledby="myTabDrop1" id="myTabDrop1-contents">
+                          <li class=""><a href="#" onclick="open_page('{% url 'set_config' %}')"   aria-expanded="false">系统设置</a></li>
+                          <li><a href="#" onclick="open_page('{% url 'help' %}')"   aria-expanded="false">使用帮助</a></li>
+                        </ul>
+                  </li>
+                </ul>
+
+            </div>
+            {% endblock %}
+        </section>
+
+        <section class="content" style="max-height: 600px;overflow:auto" >
+            {% block db_content %}
+             <div id="myTabContent" class="tab-content">
+                  <div role="tabpanel" class="tab-pane fade {% if index_flag %} active in {% endif %}" id="home" aria-labelledby="home-tab">
+                      {% if index_flag %}
+                      {% include 'bkrs/index.html' %}
+                      {% endif %}
+                  </div>
+                  <div role="tabpanel" class="tab-pane fade {% if backarchives_flag %} active in {% endif %}" id="backup_list" aria-labelledby="profile-tab">
+                      {% if backarchives_flag %}
+                        {% include 'bkrs/backarchives.html' %}
+                      {% endif %}
+                  </div>
+                  <div role="tabpanel" class="tab-pane fade {% if backup_statics_flag %} active in {% endif %}" id="backup_statics" aria-labelledby="profile-tab">
+                      {% if backup_statics_flag %}
+                        {% include 'bkrs/backup_statics.html' %}
+                      {% endif %}
+                  </div>
+                  <div role="tabpanel" class="tab-pane fade {% if backfailed_flag %} active in {% endif %}" id="backup_failed" aria-labelledby="dropdown1-tab">
+                      {% if backfailed_flag %}
+                    {% include 'bkrs/backfailed.html' %}
+                      {% endif %}
+                  </div>
+                  <div role="tabpanel" class="tab-pane fade {% if customer_flag %} active in {% endif %}" id="host_list" aria-labelledby="dropdown2-tab">
+                      {% if customer_flag %}
+                    {% include 'bkrs/customers.html' %}
+                      {% endif %}
+                  </div>
+                 <div role="tabpanel" class="tab-pane fade {% if customer_add_flag %} active in {% endif %}" id="host_add" aria-labelledby="home-tab">
+                     {% if customer_add_flag %}
+                      {% include 'bkrs/customeradd.html' %}
+                     {% endif %}
+                  </div>
+                  <div role="tabpanel" class="tab-pane fade {% if backnode_flag %} active in {% endif %}" id="storage_list" aria-labelledby="profile-tab">
+                      {% if backnode_flag %}
+                    {% include 'bkrs/backnode.html' %}
+                      {% endif %}
+                  </div>
+                  <div role="tabpanel" class="tab-pane fade {% if add_backnode_flag %} active in {% endif %}" id="storage_add" aria-labelledby="dropdown1-tab">
+                      {% if add_backnode_flag %}
+                        {% include 'bkrs/addbacknode.html' %}
+                      {% endif %}
+                  </div>
+                  <div role="tabpanel" class="tab-pane fade {% if config_flag %} active in {% endif %}" id="sysconf" aria-labelledby="dropdown1-tab">
+                      {% if config_flag %}
+                      {% include 'bkrs/config.html' %}
+                      {% endif %}
+                  </div>
+                 <div role="tabpanel" class="tab-pane fade {% if help_flag %} active in {% endif %}" id="help" aria-labelledby="dropdown2-tab">
+                     {% if  help_flag %}
+                     {% include 'bkrs/help.html' %}
+                     {% endif %}
+                  </div>
+                </div>
+
+            {% endblock %}
+
+            {% block script %}
+            {% endblock %}
+        </section>
+
+        <!-- /.content -->
+    </div>
+
+
+
+
+
+ {% endblock content %}
+

@@ -1,0 +1,1204 @@
+{% extends "include/base.html" %}
+{% load static %}
+{% load cus_filter %}
+{% block title %}
+
+    <title>设置DB</title>
+{% endblock %}
+{% block name %}
+        <link rel="stylesheet" href="{% static 'plugins/iCheck/all.css' %}">
+        <link rel="stylesheet" href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}">
+        <script src="{% static 'plugins/iCheck/icheck.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+
+    <ul id="id_tab_active" class="nav nav-tabs">
+        <li class="active"><a href="#fa-icons" onclick="reset_select('id_select_group')" data-toggle="tab" aria-expanded="false">Instance DBAccount</a></li>
+        <li class=""><a href="#glyphicons" onclick="reset_select('id_select_group_db_user')"  data-toggle="tab" aria-expanded="true">DBName Config </a></li>
+       <li class=""><a href="#fa-sysaccount" onclick="reset_select('id_select_group_sysaccount')"  data-toggle="tab" aria-expanded="true">UserPermission</a></li>
+    </ul>
+{% endblock %}
+{%block db_content%}
+
+    <style>
+        th{
+            color: #0b3e6f;
+            font-size:15px;
+
+        }
+
+        table, th, td,tr
+        {
+        border: 1px;
+        }
+
+    #example1_length{
+
+    }
+    </style>
+
+
+<form role="form" action="{% url 'set_dbname' %}" method='post'>
+{% csrf_token %}
+<input name="authenticity_token" type="hidden" value="{{ token }}">
+<div class="tab-content">
+
+
+    <div class="tab-pane active" id="fa-icons">
+                    {% if info %}
+                        <br>
+                        <br>
+                        <strong> <span style="color:red">{{ info }}</span></strong>
+                    {% endif %}
+
+
+
+
+                <div class="col-md-12 text-left">
+          <div class="box box-info col-md-12">
+              <div class="box-header with-border">
+                  <h3 class="box-title">DB_INSTANCE</h3>
+              </div>
+            <div class="box-body col-md-4">
+                 <div class="form-group col-md-12">
+
+                 <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host.id|default:0 }}')" class="form-control col-md-12"  name = "select_group">
+                            <option value ="" selected disabled >---Select Host Group---</option>
+                            {% for group in host_group %}
+                                {% if group.id == select_group %}
+                                    <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                {% else %}
+                                    <option value ="{{ group.id }}">{{ group.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+
+    {#                {% if inslist %}#}
+
+                            <select  id="select_host" class="form-control col-md-12" name = "ins_set">
+                            <option value ="" selected disabled >---Select Host ---</option>
+    {#                            {% for obj in inslist %}#}
+    {#                                {% if obj == insname %}#}
+    {#                                    <option selected="selected" value ="{{ obj.id }}">{{ obj.ip }} + {{ obj.port }}</option>#}
+    {#                                {% else %}#}
+    {#                                    <option value ="{{ obj.id }}">{{ obj.ip }} + {{ obj.port }}</option>#}
+    {#                                {% endif %}#}
+    {#                            {% endfor %}#}
+                            </select>
+    {#                            {% endif %}#}
+
+                                <button type="submit" name='query_ins' class="btn btn-primary" >查询</button>
+                                <button type="submit" name='set_ins' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-danger" >设置</button>
+                                <button type="submit" name='delete_ins' onclick="return confirm('删除该实例以及与其关联的所有的账号')"  class="btn btn-success" >删除</button>
+                                <button type="submit" name='create_ins' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-info" >创建</button>
+                </div>
+                <div class="col-md-12 ">
+                    <br>
+                    <strong>CREATE & SET</strong> <br>
+                    {% if select_host %}
+                        <input type="text" class="form-control" maxlength="30" placeholder="实例说明" value="{{ select_host.comments}}" name="comments">
+                        <input type="text" class="form-control" maxlength="30" placeholder="input IP here" value="{{ select_host.ip }}" name="newinsip">
+                        <input type="text" class="form-control" maxlength="10" placeholder="input PORT here" value="{{ select_host.port }}" name="newinsport">
+
+                    {% else %}
+                        <input type="text" class="form-control" maxlength="30" placeholder="实例说明"  name="comments">
+    {#                    <input type="text" class="form-control" maxlength="30" placeholder="input IP here" name="newinsip">#}
+                        <input type="text" class="form-control" maxlength="10" placeholder="input PORT here" name="newinsport">
+
+                    {% endif %}
+                </div>
+                <div class="col-sm-12 ">
+                    <br>
+                    <br>
+                    <strong>CHOOSE ROLE:</strong><br>
+                    <select class="form-control col-md-3"  name="role">
+                        <option selected disabled>--Select Status--</option>
+    {#                    {% if select_host %}#}
+                            {% if select_host.status|lower == "inuse" %}
+                                <option value="InUse" selected="selected">InUse</option>
+                                <option value="Idle" >Idle</option>
+                            {% elif  select_host.status|lower == "idle" %}
+                                <option value="Idle" selected="selected">Idle</option>
+                                <option value="InUse" >InUse</option>
+                            {% else %}
+                                <option value="InUse" >InUse</option>
+                                <option value="Idle" >Idle</option>
+                            {% endif %}
+    {#                    {% endif %}#}
+
+
+                    </select>
+
+                    <select class="form-control col-md-3"  name="dbtype">
+    {#                    {% if select_host %}#}
+                            <option selected disabled>--Select DB Type--</option>
+                            {% if select_host.db_type == "mysql" %}
+                                <option value="mysql" selected="selected">MySQL</option>
+                                <option value="mongodb" >Mongodb</option>
+                            {% elif select_host.db_type == "mongodb"  %}
+                                <option value="mongodb" selected="selected">Mongodb</option>
+                                <option value="mysql" >MySQL</option>
+                            {% else %}
+                                <option value="mysql" >MySQL</option>
+                                <option value="mongodb" >Mongodb</option>
+                            {% endif %}
+
+    {#                    {% endif %}#}
+                    </select>
+                </div>
+
+            </div>
+
+
+
+                <div class="box-body col-md-8 ">
+                  <div class="col-md-12">
+                    <div class="col-md-12">
+
+                            <strong>账号列表</strong> <br><br>
+                        <textarea id='id_text' hidden  name="text"></textarea>
+
+                            <select id="id_accdb_set" ondblclick="get_values()" class="form-control col-md-12" multiple="multiple"   style="width: 700px;height: 200px;" name = "accdb_set">
+                            {{  create_accout_text|safe }}
+
+
+
+                                {% if select_host != 0 %}
+                                    {% for account in db_accounts %}
+                                     <option {% if account.db_account__id is None %} disabled {% endif %}value ="{{ account.db_account__id|default_if_none:select_host.ip }}">{{ select_host.ip }}:{{ account.port }}
+                                            {% if account.db_account__id is None %}
+                                                        无账号
+                                            {% else %}{{ account.db_account__user}},{{ account.db_account__db_account_role }}{% endif %}
+
+                                            </option>
+
+                                    {% endfor %}
+                                {% else %}
+                                    {% for ip,accounts in host_list.items %}
+                                            {% for port,account in accounts.items %}
+                                               <option {% if port  == '' %}disabled{% endif %} value ="{{ ip }}:{{ port }}">{{ ip }}:{{ port }}
+                                                {% if account.0.0 is None %}
+                                                    {% if port == '' %}无实例，请先创建
+                                                        {% else %}
+                                                        无账号
+                                                        {% endif %}
+                                                {% else %}{{ account}}{% endif %}
+                                                {% endfor %}
+                                        </option>
+    {#                                {% endif %}#}
+                                    {% endfor %}
+                              {% endif %}
+                            </select>
+
+
+                    </div>
+                <br>
+
+                    <div class="col-md-9">
+                     {% if select_host == 0 %}
+                          <button type="submit" name='clear_account' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-success" >清空账号</button><span style="color:red">{{ result }}</span>
+                    {% endif %}
+
+                        {{ form.normal_db_account }}<span style="color:red">{{ form.errors.normal_db_account }}</span>
+                        {{ form.normal_db_password }}<span style="color:red">{{ form.errors.normal_db_password }}</span>
+                        {{ form.normal_db_password_again }}<span style="color:red">{{ form.errors.normal_db_password_again }}</span>
+
+                        <select class="form-control col-md-3"  id="id_acc_role" name="acc_role">
+                        {% if  account_set.db_account_role == "all" %}
+                            <option value="all" selected="selected">all</option>
+                        {% else %}
+                            <option value="all" >all</option>
+                        {% endif %}
+
+                        {% if  account_set.db_account_role == "admin" %}
+                            <option value="admin" selected="selected" >admin</option>
+                        {% else %}
+                            <option value="admin"  >admin</option>
+                        {% endif %}
+                        {% if  account_set.db_account_role == "read_write" %}
+                            <option value="read_write" selected="selected">read_write</option>
+                        {% else %}
+                            <option value="read_write">read_write</option>
+                        {% endif %}
+                        {% if  account_set.db_account_role == "write" %}
+                            <option value="write" selected="selected">write</option>
+                        {% else %}
+                            <option value="write">write</option>
+                        {% endif %}
+                        {% if  account_set.db_account_role == "read" %}
+                            <option value="read" selected="selected" >read</option>
+                        {% else %}
+                            <option value="read" >read</option>
+                        {% endif %}
+
+
+
+                    </select>
+                        {% if select_host %}
+                                <button type="submit" name='set_acc' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-danger" >修改</button>
+
+                                <button type="submit" name='delete_acc' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-success" >删除</button>
+                    {% endif %}
+                    {% if not select_host %}
+                                <button type="submit" name='create_acc' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-info" >创建</button>
+
+
+                    {% endif %}
+                </div>
+                </div>
+                </div>
+          </div>
+          </div>
+    </div>
+    <div class="tab-pane " id="glyphicons">
+      <div class="box box-info col-md-12">
+              <div class="box-header with-border">
+                  <h3 class="box-title">DB_NAME</h3>
+              </div>
+        <div class="box-body form-group col-md-12">
+
+               <div class="col-md-3">
+                   <h2><label>Group:</label></h2>
+                 <select id="id_select_group_db_user" onchange="change_group_db_user(-1,{{ select_group|default:0 }},'{{ select_host.id|default:0 }}')" class="form-control col-md-12"  name = "select_group_db_user">
+                            <option value ="" selected disabled >---Select Host Group---</option>
+                            {% for group in host_group %}
+                                {% if group.id == select_group %}
+                                    <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                {% else %}
+                                    <option value ="{{ group.id }}">{{ group.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+              </div>
+
+              <div class="col-md-9 col-sm-6 col-xs-12">
+                  <h2><label>Instance:</label></h2>
+                  <select  id="select_host_db_user" onchange="get_db()" class="form-control col-md-5" name = "ins_set_db_user">
+                        <option value ="" selected disabled >---Select Host ---</option>
+
+                  </select>
+                   <button    onclick="get_db()" type="button" class="col-md-1 btn btn-primary btn-flat">Flush</button>
+
+              </div>
+        </div>
+
+        <div class="box-body  from-group col-md-12" style="margin-top: -15px;">
+
+    <div class="col-md-11">
+                <div class="col-md-3" style="margin-left: -15px;" >
+                    <h1><label>READ:</label></h1>
+                    <select id="id_select_read" class="col-md-12" multiple="multiple" style="height:200px"></select>
+                      <!-- /btn-group -->
+                      <div class="input-group">
+                        <input id="read_new-event" type="text" class="form-control" placeholder="DB Name">
+                        <div class="input-group-btn">
+                          <button   style="width: 50px" id="read_delete-new-event" type="button" class="btn btn-danger">Del</button>
+                        </div>
+                        <!-- /btn-group -->
+                      </div>
+                      <div class="input-group">
+                          <input id="id_read_explain" type="text" class="form-control" placeholder="DB Explain">
+                        <div class="input-group-btn">
+                             <button style="width: 50px"  id="read_add-new-event" type="button" class="btn btn-primary btn-flat">Add</button>
+                        </div>
+                      </div>
+
+                </div>
+                <div class="col-md-3">
+                    <h1><label>WRITE:</label></h1>
+                    <select id="id_select_write" class="col-md-12" multiple="multiple" style="height:200px"></select>
+                    <div class="input-group">
+                        <input id="write_new-event" type="text" class="form-control" placeholder="DB Name">
+                        <div class="input-group-btn">
+                          <button  style="width: 50px" id="write_delete-new-event" type="button" class="btn btn-primary btn-danger">Del</button>
+
+                        </div>
+                        <!-- /btn-group -->
+                      </div>
+                     <div class="input-group">
+                        <input id="id_write_explain" type="text" class="form-control" placeholder="DB Explain">
+
+                        <div class="input-group-btn">
+                          <button style="width: 50px" id="write_add-new-event" type="button" class="btn btn-primary btn-flat">Add</button>
+
+                        </div>
+                        <!-- /btn-group -->
+                      </div>
+                </div>
+                <div class="col-md-3">
+                    <h1><label>READ-WRITE:</label></h1>
+                    <select id="id_select_read_write" class="col-md-12" multiple="multiple" style="height:200px"></select>
+                    <div class="input-group">
+                        <input id="read_write_new-event" type="text" class="form-control" placeholder="DB Name">
+
+                        <div class="input-group-btn">
+                         <button style="width: 50px"   id="read_write_delete-new-event" type="button" class="btn btn-primary btn-danger">Del</button>
+                        </div>
+                        <!-- /btn-group -->
+                      </div>
+                     <div class="input-group">
+                        <input id="id_read_write_explain" type="text" class="form-control" placeholder="DB Explain">
+
+                        <div class="input-group-btn">
+                          <button style="width: 50px"  id="read_write_add-new-event" type="button" class="btn btn-primary btn-flat">Add</button>
+                        </div>
+                        <!-- /btn-group -->
+                      </div>
+                </div>
+              <div class="col-md-3">
+                    <h1><label>ALL:</label></h1>
+                    <select id="id_select_all" class="col-md-12" multiple="multiple" style="height:200px"></select>
+                    <div class="input-group">
+                        <input id="all_new-event" type="text" class="form-control" placeholder="DB Name">
+
+                        <div class="input-group-btn">
+                         <button  style="width: 50px" id="all_delete-new-event" type="button" class="btn btn-primary btn-danger">Del</button>
+                        </div>
+                        <!-- /btn-group -->
+                      </div>
+                    <div class="input-group">
+                        <input id="id_all_explain" type="text" class="form-control" placeholder="DB Explain">
+
+                        <div class="input-group-btn">
+                          <button  style="width: 50px" id="all_add-new-event" type="button" class="btn btn-primary btn-flat">Add</button>
+                        </div>
+                        <!-- /btn-group -->
+                      </div>
+                </div>
+    </div>
+            <div class=" col-md-1 text-center" style="top:100px;margin-left: -15px;width: 105px;">
+    {#         <button  type="button" class="btn btn-block btn-adn btn-lg">Save</button>#}
+                <button id="id_save" disabled type="button" class="btn btn-warning" data-toggle="modal" data-target="#modal-warning">
+                    Save
+                  </button>
+             </div>
+        </div>
+
+
+    </div>
+    </div>
+    <div class="tab-pane " id="fa-sysaccount">
+            <div class="col-md-12">
+                   <h2><label>Group:</label></h2>
+                 <select id="id_select_group_sysaccount" onchange="change_group_sysaccount(-1,{{ select_group|default:0 }},'{{ select_host.id|default:0 }}')" class="form-control col-md-12"  name = "select_group_db_user">
+                            <option value ="" selected disabled >---Select Host Group---</option>
+                            {% for group in host_group %}
+                                {% if group.id == select_group %}
+                                    <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                {% else %}
+                                    <option value ="{{ group.id }}">{{ group.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+              </div>
+            <div class="col-md-12 col-sm-6 col-xs-12">
+
+                  <h2><label>Instance:</label></h2>
+
+                  <select  id="select_host_sysaccount" class="form-control col-md-5" name = "ins_set_db_user">
+                        <option value ="" selected disabled >---Select Host ---</option>
+
+                  </select>
+
+
+              </div>
+            <div class="col-md-2 main" style="margin-left: -15px">
+
+                        <div class="col-md-12  ">
+                            {% if userlist %}
+                                <br>
+                                <strong>CHOOSE USER:</strong> <br>
+                                <select id='id_user_set' ondblclick="get_user_db()" class="form-control col-md-1" size="10" multiple="multiple" name = "user_set">
+                                    {% for obj in userlist %}
+                                        {% if obj in dbtagdt.account.all  %}
+                                            <option selected="selected" value ="{{ obj.username }}">{{ obj.username }}</option>
+                                        {% else %}
+                                            <option value ="{{ obj.username }}">{{ obj.username }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-12 ">
+                                        <button type="submit" id="id_query_sysaccount" form="id_form_db_user" name='query' class="btn btn-primary" >查询</button>
+                                        <button    type="button" class="btn btn-danger" data-toggle="modal" data-target="#save_permission">设置</button>
+                        </div>
+
+                         <div class=" col-md-12">
+
+                             <label>
+                              ADMIN
+                            </label>
+                            <br>
+                              <div class="icheckbox_minimal-red" aria-checked="false" aria-disabled="false" style="position: relative;">
+                                  <input type="checkbox" name="is_admin" id='id_is_admin' class="minimal-red" style="position: absolute; opacity: 0;">
+                              </div>
+            <br>
+                       
+                          </div>
+
+
+                              </div>
+            <div class="col-md-10" style="margin-left: -20px;margin-right: 10px;">
+              <br><br>
+                 <div class="box">
+                        <div class="box-header">
+                          <h3 class="box-title">Database</h3>
+                        </div>
+                        <!-- /.box-header -->
+                        <div class="box-body">
+                          <table id="example1" class="table table-bordered table-striped">
+{#                            <thead>#}
+{#                            <tr>#}
+{#                              <th><input type='checkbox'></th>#}
+{#                              <th>DBNameID</th>#}
+{#                              <th>IP</th>#}
+{#                              <th>Port</th>#}
+{#                              <th>Database</th>#}
+{#                              <th>Explain</th>#}
+{#                              <th>DBRole</th>#}
+{#                              <th><input type='checkbox'>Read</th>#}
+{#                              <th><input type='checkbox'>Write</th>#}
+{#                              <th><input type='checkbox'>ReadWrite</th>#}
+{#                              <th><input type='checkbox'>All</th>#}
+{#                                <th>Operate</th>#}
+{#                            </tr>#}
+{#                            </thead>#}
+{#                            <tbody id="id_tbody">#}
+{#                            </tbody>#}
+            {#                <tfoot>#}
+            {#                <tr>#}
+            {#                  <th>Rendering engine</th>#}
+            {#                  <th>Browser</th>#}
+            {#                  <th>Platform(s)</th>#}
+            {#                  <th>Engine version</th>#}
+            {#                  <th>CSS grade</th>#}
+            {#                </tr>#}
+            {#                </tfoot>#}
+                          </table>
+                        </div>
+                        <!-- /.box-body -->
+                      </div>
+
+          </div>
+
+</div>
+
+<div class="modal modal-warning fade" id="modal-warning" style="display: none;">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">×</span></button>
+                <h4 class="modal-title">Warning Modal</h4>
+              </div>
+              <div class="modal-body">
+                <p>One fine body…</p>
+              </div>
+              <div class="modal-footer">
+
+                <button type="button" onclick="save_db(-1)" class="btn btn-block btn-danger btn-lg" data-dismiss="modal" style="margin-left: -2px">Save changes [empty local] and add new selected</button>
+                 <br>
+{#                 <button id="id_close" hidden type="button" class="btn btn-outline " data-dismiss="modal">Colose</button>#}
+                  <button type="button" onclick="save_db(1)" class="btn btn-block btn-success btn-lg" data-dismiss="modal">Save changes [not empty local] only add new selected</button>
+
+                </div>
+            </div>
+            <!-- /.modal-content -->
+          </div>
+          <!-- /.modal-dialog -->
+        </div>
+
+<div class="modal modal-warning fade" id="save_permission" style="display: none;">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">×</span></button>
+                <h4 class="modal-title">Warning Modal</h4>
+              </div>
+              <div class="modal-body">
+                <p>One fine body…</p>
+              </div>
+              <div class="modal-footer">
+
+                <button type="button" onclick="save_permission(-1)" class="btn btn-block btn-danger btn-lg" data-dismiss="modal" style="margin-left: -2px">Save changes [empty local] and add new selected</button>
+                 <br>
+{#                 <button id="id_close" hidden type="button" class="btn btn-outline " data-dismiss="modal">Colose</button>#}
+                  <button type="button" onclick="save_permission(1)" class="btn btn-block btn-success btn-lg" data-dismiss="modal">Save changes [not empty local] only add new selected</button>
+
+                </div>
+            </div>
+            <!-- /.modal-content -->
+          </div>
+          <!-- /.modal-dialog -->
+        </div>
+
+<input id="handle_status" value="" hidden="hidden">
+</div>
+    </form>
+
+    <script>
+        function reset_select(selector){
+            if (selector === 'id_select_group'){
+                console.log($("#select_host").val() )
+                if ($("#select_host").val() === null){
+                    document.getElementById(selector).options.selectedIndex = 0}
+            }
+             if (selector === 'id_select_group_db_user'){
+                if ($("#select_host_db_user").val() === null){
+                    document.getElementById(selector).options.selectedIndex = 0}
+            }
+             if (selector === 'id_select_group_sysaccount'){
+                if ($("#select_host_sysaccount").val() === null){
+                    document.getElementById(selector).options.selectedIndex = 0}
+            }
+{#            document.getElementById(selector).options.selectedIndex = 0; //回到初始状态#}
+{#            $("#"+selector).selectpicker('refresh');//对searchPayState这个下拉框进行重置刷新#}
+
+
+        }
+    </script>
+
+    <script>
+
+
+$('#example1').DataTable({
+        "columnDefs": [
+            {"orderable": false, "targets": [0,7,8,9,10]}
+        ],
+        language: {
+                        lengthMenu: '<select class="form-control input-xsmall">' + '<option value="5">5</option>' + '<option value="10">10</option>' + '<option value="20">20</option>' + '<option value="30">30</option>' + '<option value="40">40</option>' + '<option value="50">50</option>' + '</select>条记录',//左上角的分页大小显示。
+                        search: '<span class="label label-primary" style="font-size: 100%;font-weight:0;">搜索：</span>',//右上角的搜索文本，可以写html标签
+
+                        paginate: {//分页的样式内容。
+                        previous: "上一页",
+                        next: "下一页",
+                        first: "第一页",
+                        last: "最后"
+                    },
+
+                    zeroRecords: "没有内容",//table tbody内容为空时，tbody的内容。
+                    //下面三者构成了总体的左下角的内容。
+                    info: "总共_PAGES_ 页，显示第_START_ 到第 _END_ ，筛选之后得到 _TOTAL_ 条，初始_MAX_ 条 ",//左下角的信息显示，大写的词为关键字。
+                    infoEmpty: "0条记录",//筛选为空时左下角的显示。
+                    infoFiltered: ""//筛选之后的左下角筛选提示，
+                    },
+                paging: true,
+                pagingType: "full_numbers",//分页样式的类型
+
+{#                    data: dataSet,#}
+                    columns: [
+                        { title: "<input id='id_all' onclick='all_check("+'"'+'id_all'+'"'+")' type='checkbox'>" },
+                        { title: "DBNameID" },
+                        { title: "IP" },
+                        { title: "Port." },
+                        { title: "Database" },
+                        { title: "Explain" },
+                        { title: "DBRole" },
+                        { title: "<input id='id_all_read'  onclick='all_check("+'"'+'id_all_read'+'"'+")' type='checkbox'>Read"},
+                        { title: "<input id='id_all_write' onclick='all_check("+'"'+'id_all_write'+'"'+")'  type='checkbox'>Write"},
+                        { title: "<input id='id_all_read_write' onclick='all_check("+'"'+'id_all_read_write'+'"'+")'  type='checkbox'>ReadWrite"},
+                        { title: "<input  id='id_all_all' onclick='all_check("+'"'+'id_all_all'+'"'+")' type='checkbox'>All"},
+                        { title: 'Operate' }
+                    ]})
+                    .column( '1:visible' )
+                    .order( 'asc' )
+                    .draw();
+                $("#example1_filter input[type=search]").css({ width: "300px" });//右上角的默认搜索文本框，不写这个就超出去了。
+
+
+
+
+
+
+</script>
+
+<script>
+    $(function(){
+        $('input[type="radio"],input[type="checkbox"]').iCheck({
+            checkboxClass: 'icheckbox_minimal-red',
+            radioClass: 'iradio_polaris'
+        })
+    });
+
+
+   $("#id_query_sysaccount").click(function(){
+       var instance_id = $("#select_host_sysaccount").val();
+       idx = $("#id_user_set");
+       var sys_account = idx.val();
+       l = [];
+       idx.find("option:selected").each(function(){
+           l.push($(this).val())
+           });
+       if (l.length === 1 && instance_id !== null){
+
+           var dataSet = [];
+           $.getJSON('/dbmanage/add_sys_account_perm/',{'instance_id':instance_id,'sys_account':sys_account[0]},function(ret){
+               var is_admin = ret.is_admin;
+{#               console.log(is_admin)#}
+               if (is_admin === true){
+{#                   alert(1)#}
+                   $('#id_is_admin').parent().addClass('checked')
+               }
+               else{
+                   $('#id_is_admin').parent().removeClass('checked')
+               }
+               $.each(ret.db_list,function(index,value){
+{#                        console.log(value)#}
+                   var row = [] ;
+                   if (value.sys_account_perm !== 'no'){
+                      row.push('<input name="all_box" checked type="checkbox">');
+                   }else{ row.push('<input name="all_box"  type="checkbox">');}
+                   row.push(value.dbname_id);
+                   row.push(value.ip);
+                   row.push(value.port);
+                   row.push(value.dbname);
+                   row.push(value.dbtag);
+                   row.push(value.db_account_role);
+                   row.push('<input id="id_checkbox_'+value.dbname_id+'_read" name="all_read_box" '+role(value.db_account_role,'read',value.sys_account_perm)+' type="checkbox">');
+                   row.push('<input id="id_checkbox_'+value.dbname_id+'_write" name="all_write_box" '+role(value.db_account_role,'write',value.sys_account_perm)+' type="checkbox">');
+                   row.push('<input id="id_checkbox_'+value.dbname_id+'_read_write" name="all_read_write_box" '+role(value.db_account_role,'read_write',value.sys_account_perm)+' type="checkbox">');
+                   row.push('<input id="id_checkbox_'+value.dbname_id+'_all" name="all_all_box" '+role(value.db_account_role,'all',value.sys_account_perm)+' type="checkbox">');
+                   if (value.sys_account_perm === 'read' || value.sys_account_perm === 'write' || value.sys_account_perm === 'read_write' || value.sys_account_perm === 'all'){
+                   row.push('<a href="#"><li class="btn btn-sm btn-info" onclick="return tanchu('+value.db_database_permission_id+')" value="1">编辑</li></a>')
+                        }else{
+                         row.push('<a href="#"><li class="btn btn-sm btn-info" disabled onclick="" value="1">编辑</li></a>')
+                    }
+                   dataSet.push(row);
+               });
+
+{#               console.log(dataSet)#}
+{#                $('#example1').dataTable().fnClearTable();#}
+               var example = $('#example1');
+               example.dataTable().fnDestroy();
+               example.DataTable( {
+                    language: {
+                        lengthMenu: '<select class="form-control input-xsmall">' + '<option value="5">5</option>' + '<option value="10">10</option>' + '<option value="20">20</option>' + '<option value="30">30</option>' + '<option value="40">40</option>' + '<option value="50">50</option>' + '</select>条记录',//左上角的分页大小显示。
+                        search: '<span class="label label-primary" style="font-size: 100%;font-weight:0;">搜索：</span>',//右上角的搜索文本，可以写html标签
+
+                        paginate: {//分页的样式内容。
+                        previous: "上一页",
+                        next: "下一页",
+                        first: "第一页",
+                        last: "最后"
+                    },
+
+                    zeroRecords: "没有内容",//table tbody内容为空时，tbody的内容。
+                    //下面三者构成了总体的左下角的内容。
+                    info: "总共_PAGES_ 页，显示第_START_ 到第 _END_ ，筛选之后得到 _TOTAL_ 条，初始_MAX_ 条 ",//左下角的信息显示，大写的词为关键字。
+                    infoEmpty: "0条记录",//筛选为空时左下角的显示。
+                    infoFiltered: ""//筛选之后的左下角筛选提示，
+                    },
+                paging: true,
+                pagingType: "full_numbers",//分页样式的类型
+                "columnDefs":[
+                    {"orderable":false,"targets":[0,7,8,9,10]}
+                ],
+
+                    data: dataSet,
+                    columns: [
+                        { title: "<input id='id_all' onclick='all_check("+'"'+'id_all'+'"'+")' type='checkbox'>" },
+                        { title: "DBNameID" },
+                        { title: "IP" },
+                        { title: "Port." },
+                        { title: "Database" },
+                        { title: "Explain" },
+                        { title: "DBRole" },
+                        { title: "<input id='id_all_read'  onclick='all_check("+'"'+'id_all_read'+'"'+")' type='checkbox'>Read"},
+                        { title: "<input id='id_all_write' onclick='all_check("+'"'+'id_all_write'+'"'+")'  type='checkbox'>Write"},
+                        { title: "<input id='id_all_read_write' onclick='all_check("+'"'+'id_all_read_write'+'"'+")'  type='checkbox'>ReadWrite"},
+                        { title: "<input  id='id_all_all' onclick='all_check("+'"'+'id_all_all'+'"'+")' type='checkbox'>All"},
+                        { title: 'Operate' }
+                    ]})
+                    .column( '1:visible' )
+                    .order( 'asc' )
+                    .draw();
+{#                $("#table_local_filter input[type=search]").css({ width: "auto" });//右上角的默认搜索文本框，不写这个就超出去了。#}
+
+                $("#example1_filter input[type=search]").css({ width: "300px" });//右上角的默认搜索文本框，不写这个就超出去了。
+
+           });
+
+
+
+       }
+       else{alert("user must be single and instance should selected")}
+
+
+
+   });
+
+function role(db_account_role,role,sys_account_perm){
+    switch(db_account_role){
+        case 'read':
+            switch(role){
+                case 'read':
+                    if (sys_account_perm === role){return 'checked="checked"';}
+                    else {return '';}
+                default:
+                    return 'disabled';
+            }
+        case 'write':
+            switch(role){
+                case 'write':
+                     if (sys_account_perm === role){return 'checked="checked"';}
+                    else {return '';}
+
+                default:
+                    return 'disabled';
+            }
+        case 'read_write':
+             switch(role){
+                case 'read':
+                case 'write':
+                case 'read_write':
+                     if (sys_account_perm === role){return 'checked="checked"';}
+                    else {return '';}
+
+                default:
+                    return 'disabled';
+            }
+        case 'all':
+         switch(role){
+            case 'read':
+            case 'write':
+            case 'read_write':
+            case 'all':
+                 if (sys_account_perm === role){return 'checked="checked"';}
+                    else {return '';}
+            default:
+                return 'disabled';
+        }
+    }
+}
+
+function save_db(save_flag){
+    var read = $('#id_select_read').val();
+    var instance_id = $("#select_host_db_user").val();
+    var read_write = $('#id_select_read_write').val();
+    var write = $('#id_select_write').val();
+    var all = $('#id_select_all').val();
+    if(read.length>0 || write.length>0 || read_write.length>0 || all.length>0){
+        var jsonObj = { read: read, read_write: read_write, write: write, all:all};
+          $.ajax({
+               url : "/dbmanage/add_db/",
+               type : "post",
+               data : {'data':JSON.stringify(jsonObj),csrfmiddlewaretoken: '{{ csrf_token }}','instance_id':instance_id,'save_flag':save_flag},
+{#               dataType:'json',#}
+               success : function(result) {
+                   console.log(result)
+                         if (result == "success") {
+                           alert('SAVE OK!');
+                           get_db();
+                         } else {
+                            alert(result)
+                            }
+                        },
+               error:function(msg){
+                    console.log(msg)
+                 $(".notice").html('Error:'+msg);
+               }
+             })
+
+{#   #}
+{#      $.ajax({url:'/dbmanage/add_db/', data:JSON.stringify({'data':data}), type:'POST', success:function(ret){#}
+{##}
+{#                }})#}
+
+    }
+    else{
+{#       $("#id_close").click;#}
+        alert("Can't commit empty,At least one selected")
+    }
+
+
+}
+function isInList( num, list ) {
+// List is an Array()
+result = false;
+for(i in list) {
+if(num == list[i]) { result = true }
+}
+return result
+}
+
+function get_db() {
+    var select_host_db_user = $("#select_host_db_user");
+    var instance_id = select_host_db_user.val();
+    $("#id_save").removeAttr('disabled');
+    $("#id_select_read").empty();
+    $("#id_select_read_write").empty();
+    $("#id_select_write").empty();
+    $("#id_select_all").empty();
+    var roles = ['read','write','read_write','all'];
+    for (var role in roles ){
+        if ( new RegExp(','+roles[role]+']').test((select_host_db_user).find('option:selected').text())){
+{#            console.log(roles[role],(select_host_db_user).find('option:selected').text())#}
+{#            console.log(role,(select_host_db_user).find('option:selected').text())#}
+            $('#'+roles[role] +'_add-new-event').removeAttr('disabled');
+            $('#'+roles[role]+'_delete-new-event').removeAttr('disabled');
+        }
+        else{
+{#           console.log('ture',roles[role],(select_host_db_user).find('option:selected').text())#}
+            $('#'+roles[role]+'_add-new-event').attr('disabled',true);
+            $('#'+roles[role]+'_delete-new-event').attr('disabled',true);
+        }
+    }
+
+    $.getJSON('/dbmanage/add_db/', {'instance_id': instance_id}, function (ret) {
+
+        $.each(ret, function(db_account_role,db_names){
+            var select_id = 'id_select_'+db_account_role;
+{#            $('#'+db_account_role+'_add-new-event').removeAttr('disabled');#}
+{#            $('#'+db_account_role+'_delete-new-event').removeAttr('disabled');#}
+            for(var db_name in db_names){
+                var status_text = '';
+                switch (db_names[db_name])
+                        {
+                        case 0:
+                          status_text="本地无，远程有";
+                          break;
+                        case 1:
+                          status_text="本地有，远程有";
+                          break;
+                        case 2:
+                          status_text="本地有，远程无";
+                          break;
+                        case -1:
+                          status_text="本地有，远程未知";
+                          break;
+
+                        }
+
+                var text = db_name+' ['+status_text+' ]';
+{#                console.log(select_id,db_name,text);#}
+                $('#'+select_id).append('<option title="'+text+'"value="'+db_name+'">'+text+'</option>');
+{#                console.log(db_account_role,db_name,db_names[db_name])#}
+            }
+
+        })
+    })
+}
+
+function all_check(id) {
+
+    function box_name(idx){
+        switch (idx) {
+            case 'id_all':
+                return 'all_box';
+            case 'id_all_read':
+                return 'all_read_box';
+            case 'id_all_write':
+                return 'all_write_box';
+            case 'id_all_all':
+                return 'all_all_box';
+            case 'id_all_read_write':
+                return 'all_read_write_box';
+        }
+}
+
+
+     var nn = $("#"+id).is(":checked"); //判断th中的checkbox是否被选中，如果被选中则nn为true，反之为false
+    console.log(nn)
+     var namebox = $("input[name^="+box_name(id)+"]");
+
+{#             console.log(id,box_name(id))#}
+         if(nn === true) {
+               //获取name值为boxs的所有input
+             for(i = 0; i < namebox.length; i++) {
+                 if( namebox[i].disabled === false){
+
+                     namebox[i].checked=true; }    //js操作选中checkbox
+             }
+         }
+         if(nn === false) {
+
+             for(i = 0; i < namebox.length; i++) {
+                 namebox[i].checked=false;
+             }
+         }
+     }
+
+
+
+function save_permission(save_flag){
+     var is_admin = '';
+     var instance_id = $("#select_host_sysaccount").val();
+     if($("#id_is_admin").is(':checked')){
+{#         console.log(11)#}
+         is_admin = 1
+     } else{is_admin = 0}
+     $("tr").css({"color": ""});
+     var namebox = $("input[name^='all_box']");
+     var rows = document.getElementById("example1").rows;
+     var data = [];
+     var no_checkbox_count =0 ;
+     var allcheckbox_count = 0
+     for(i = 0; i < namebox.length; i++) {
+        if (namebox[i].checked === true){
+            var row = namebox[i].parentElement.parentElement.rowIndex;
+            var row_data = {};
+            row_data['dbname_id']=rows[row].cells[1].innerHTML;
+            row_data['read'] = $("#id_checkbox_"+rows[row].cells[1].innerHTML+'_read').is(':checked');
+            row_data['write'] = $("#id_checkbox_"+rows[row].cells[1].innerHTML+'_write').is(':checked');
+            row_data['read_write'] = $("#id_checkbox_"+rows[row].cells[1].innerHTML+'_read_write').is(':checked');
+            row_data['all'] = $("#id_checkbox_"+rows[row].cells[1].innerHTML+'_all').is(':checked');
+            allcheckbox_count =+ 1;
+            if (row_data['read'] === false && row_data['write'] === false && row_data['read_write'] === false && row_data['all'] === false ){
+                no_checkbox_count += 1;
+               $("#id_checkbox_"+rows[row].cells[1].innerHTML+'_all').parent().parent().css({"color":"red"})
+            }
+            data.push(row_data)
+        }
+
+     }
+     console.log(namebox.length )
+     if (no_checkbox_count > 0 ){
+         alert('checkbox error')
+     }
+     else {
+         var sys_accounts = $("#id_user_set").val();
+         $.ajax({
+             url: "/dbmanage/add_sys_account_perm/",
+             type: "post",
+             data: {
+                 'data': JSON.stringify(data),
+                 'sys_accounts': JSON.stringify(sys_accounts),
+                 'instance_id':instance_id,
+                 'is_admin':is_admin,
+                 csrfmiddlewaretoken: '{{ csrf_token }}',
+                 'save_flag': save_flag
+             },
+             {#               dataType:'json',#}
+             success: function (result) {
+                 console.log(result)
+                 if (result === "success") {
+                     alert('SAVE OK!');
+                     $("#id_query_sysaccount").click()
+
+                 } else {
+                     alert(result)
+                 }
+             },
+             error: function (msg) {
+                 console.log(msg)
+                 $(".notice").html('Error:' + msg);
+             }
+         })
+     };
+     console.log(data)
+}
+
+
+
+function get_user_db(){
+        var userid = $("#id_user_set").val()[0];
+        var select_host = $("#select_host_db_user").val();
+
+        $.getJSON('/dbmanage/get_user_permission/',{'userid':userid,'select_host':select_host},function(ret){
+{#            if (ret['data'].length)#}
+
+        console.log(ret)
+        })
+
+
+        if (select_host === null){
+
+
+        }
+
+}
+
+
+ $('#read_add-new-event').click(function () {
+
+      //Get value and make sure it is not null
+      var val = $('#read_new-event').val();
+      var explain = $('#id_read_explain').val();
+      if (val.length == 0) {
+        return
+      }
+      else {
+          var l = []
+        $("#id_select_read").find('option').each(function(){  //遍历所有option
+          var txt = $(this).val().split(':')[0];   //获取option值
+            l.push(txt)})
+          if(! isInList(val,l)){
+               $("#id_select_read").append('<option value="'+val+':'+explain+'">'+val+'</option>')}
+              else{return}
+          }
+
+ })
+
+
+ $('#write_add-new-event').click(function () {
+
+      //Get value and make sure it is not null
+      var val = $('#write_new-event').val();
+      var explain = $('#id_write_explain').val();
+      if (val.length == 0) {
+        return
+      }
+      else {
+
+          var l = []
+        $("#id_select_write").find('option').each(function(){  //遍历所有option
+          var txt = $(this).val().split(':')[0];   //获取option值
+            l.push(txt)})
+          if(! isInList(val,l)){
+               $("#id_select_write").append('<option value="'+val+':'+explain+'">'+val+'</option>')}
+              else{return}
+      }
+ })
+
+
+ $('#read_write_add-new-event').click(function () {
+
+      //Get value and make sure it is not null
+      var val = $('#read_write_new-event').val();
+      var explain = $('#id_read_write_explain').val();
+      if (val.length == 0) {
+        return
+      }
+      else {
+
+          var l = []
+        $("#id_select_read_write").find('option').each(function(){  //遍历所有option
+          var txt = $(this).val().split(':')[0];   //获取option值
+            l.push(txt)})
+          if(! isInList(val,l)){
+               $("#id_select_read_write").append('<option value="'+val+':'+explain+'">'+val+'</option>')}
+              else{return}
+
+
+      }
+ })
+
+
+ $('#all_add-new-event').click(function () {
+
+      //Get value and make sure it is not null
+      var val = $('#all_new-event').val();
+      var explain = $('#id_all_explain').val();
+      if (val.length == 0) {
+        return
+      }
+      else {
+
+           var l = []
+        $("#id_select_all").find('option').each(function(){  //遍历所有option
+          var txt = $(this).val().split(':')[0];   //获取option值
+            l.push(txt)})
+          if(! isInList(val,l)){
+               $("#id_select_all").append('<option value="'+val+':'+explain+'">'+val+'</option>')}
+              else{return}
+      }
+ })
+
+$('#all_delete-new-event').click(function(){
+{#    console.log($('#id_select_all').find('option:selected').val());#}
+    $('#id_select_all').find('option:selected').remove()
+})
+
+$('#read_delete-new-event').click(function(){
+{#    console.log($('#id_select_all').find('option:selected').val());#}
+    $('#id_select_read').find('option:selected').remove()
+})
+$('#read_write_delete-new-event').click(function(){
+{#    console.log($('#id_select_all').find('option:selected').val());#}
+    $('#id_select_read_write').find('option:selected').remove()
+})
+$('#write_delete-new-event').click(function(){
+{#    console.log($('#id_select_all').find('option:selected').val());#}
+    $('#id_select_write').find('option:selected').remove()
+})
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+    <script>
+
+    $("button").click(function (){
+           document.getElementById('id_text').textContent=document.getElementById('id_accdb_set').innerHTML
+    });
+
+    </script>
+
+
+<script>
+    function get_values(){
+{#        var value = $("#id_accdb_set").val();#}
+        var text = $("#id_accdb_set").find("option:selected").text();
+        var user = text.split('  ')[20].split(',')[0].replace(/^(\s|\u00A0)+/,'').replace(/(\s|\u00A0)+$/,'');
+        var role = text.split('  ')[20].split(',')[1].replace(/^(\s|\u00A0)+/,'').replace(/(\s|\u00A0)+$/,'');
+        $("#id_normal_db_account").val(user);
+        $("#id_acc_role").find("option[value='"+role+"']").attr("selected",true);
+
+    }
+</script>
+    <script src="{% static 'myapp/select_group.js' %}"></script>
+<script>
+function tanchu(n){
+    layer.open({
+    type: 2,
+    title: '修改黑名单和权限',
+    closeBtn: 1,
+    area: ['700px', '550px'],
+    shadeClose: true, //点击遮罩关闭
+    content: ['/dbmanage/perm_detail_edit/' + n,],
+    end:function(){
+            var handle_status = $("#handle_status").val();
+            if ( handle_status === '1' ) {
+                $("#handle_status").val('');
+                layer.msg('保存成功！',{
+                    icon: 1,
+                    time: 2000 //2秒关闭（如果不配置，默认是3秒）
+                },function(){
+{#                    history.go(0);#}
+                });
+            } else if ( handle_status === '2' ) {
+                $("#handle_status").val('');
+                layer.msg('修改失败！',{
+                    icon: 2,
+                    time: 2000 //2秒关闭（如果不配置，默认是3秒）
+                },function(){
+{#                    history.go(0);#}
+                });
+            }
+        }
+  });
+}
+</script>
+
+
+<script>
+
+    var h = '';
+    if (({{  select_host.id|default:0 }}) > 0 && ({{ select_host.group_id|default:0 }}) == 0){
+        h = '{{ select_host.id }}';
+    }
+    else if (({{ select_host.group_id|default:0 }}) >0){
+        h = '{{ select_host.ip }}';
+    }
+    else {
+        h = 0
+    }
+
+    change_group(-2,{{ select_group|default:0 }},h);
+
+
+</script>
+
+{% endblock %}
+

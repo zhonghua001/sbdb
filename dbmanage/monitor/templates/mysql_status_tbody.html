@@ -1,0 +1,58 @@
+{% load cus_filter %}
+                        {% for item in posts.object_list %}
+                            <tr>
+                                <td> {{ posts.start_index|add:forloop.counter0 }} </td>
+
+                                <td>
+                                    {{ item.db_ip }} : {{ item.db_port }}
+                                </td>
+                                <td>
+                                    {% if item.connect == 1 %}
+                                        <span class="label label-success">成功</span>
+                                    {% else %}
+                                        <span class="label label-danger">失败</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.role == "master" %}
+                                        <span class="label label-info">M</span>
+                                    {% elif item.role == "slave" %}
+                                        <span class="label label-warning">S</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ item.uptime| s_to_d }}
+                                </td>
+                                <td>
+                                    {{ item.version }}
+                                </td>
+                                <td>
+                                    {{ item.threads_connected }}
+                                </td>
+
+                                <td>
+                                    {{ item.threads_running }}
+                                </td>
+
+                                <td>
+                                    {{ item.bytes_received_persecond }}KB
+                                </td>
+
+                                <td>
+                                    {{ item.bytes_sent_persecond }}KB
+                                </td>
+
+
+                                <td>
+                                    {{ item.queries_persecond }}
+                                </td>
+                                <td>
+                                    {{ item.transaction_persecond }}
+                                </td>
+                                <td>
+    {#                                {{ item.create_time|adjtime|date:"y-m-d H:i"  }}#}
+                                    {{ item.create_time|date:"y-m-d H:i:s"  }}
+                                </td>
+
+                            </tr>
+                        {% endfor %}

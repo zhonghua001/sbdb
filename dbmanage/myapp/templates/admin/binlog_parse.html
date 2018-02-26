@@ -1,0 +1,279 @@
+{% extends "include/base.html" %}
+{% load static %}
+{% block title %}
+    <title>BINLOG PARSE</title>
+{% endblock %}
+{% block name %}
+    欢迎使用<span style="color:red">BINLOG解析</span>功能
+{% endblock %}
+
+{%block db_content%}
+
+
+
+        <form role="form" method='post'>
+            {% csrf_token %}
+{#            {% include "include/sidebar.html" %}#}
+        <div class="col-md-12 no-padding">
+           <div class="box box-primary col-md-12 no-padding">
+                <div class="box-header with-border">
+                  <h4 class="box-title">Binlog Parser</h4>
+                </div>
+            <!-- /.box-header -->
+            <!-- form start -->
+
+              <div class="box-body ">
+
+                        <div class="row">
+                            <div class="col-md-3 ">
+                             <div class="form-group">
+                              <label for="id_select_group" style="margin-top: 10px">Group:</label>
+                                 <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host|default:0 }}')" class="form-control col-md-12"  name = "select_group">
+                                    <option value ="" selected disabled >---Select Host Group---</option>
+                                        {% for group in host_group %}
+                                            {% if group.id == select_group %}
+                                                <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                            {% else %}
+                                                <option value ="{{ group.id }}">{{ group.name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                </select>
+                             </div>
+                        </div>
+                            <div class="col-md-3  ">
+                                 <div class="form-group">
+                                  <label for="id_binary_list" style="margin-top: 10px">BINLOG:</label>
+                                    <select id="id_binary_list" class="form-control col-md-3" name = "binary_list">
+                                        {% for obj in binlist %}
+                                            {% if obj == binname %}
+                                                <option selected="selected" value ="{{ obj }}">{{ obj }}</option>
+                                            {% else %}
+                                                <option value ="{{ obj }}" >{{ obj }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3  ">
+                                <div class="form-group">
+                                 <label for="id_dblist" style="margin-top: 10px">DB:</label>
+                                 <select  id="id_dblist" class="form-control col-md-3" name = "dblist">
+                                    {% for obj in dblist %}
+                                        {% if obj == dbselected %}
+                                            <option selected="selected" value ="{{ obj }}">{{ obj }}</option>
+                                        {% else %}
+                                            <option value ="{{ obj }}" >{{ obj }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                               </div>
+                            </div>
+                            <div class="col-md-3  ">
+                                 <div class="form-group">
+                                     <label for="id_dblist" style="margin-top: 10px">TABLE:</label>
+                                        {% if tbname %}
+                                            <input id="id_tbname" type="text" placeholder="tablename" class="form-control" maxlength="30" value="{{ tbname }}" name="tbname">
+                                        {% else %}
+                                            <input id="id_tbname" type="text" placeholder="tablename" class="form-control" maxlength="30"  name="tbname">
+                                        {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                              <div class="form-group">
+                                <label for="select_host" >Instance:</label>
+                                 <select  id="select_host" class="form-control col-md-12" name = "ins_set">
+                                    <option value ="" selected disabled >---Select Host ---</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div class="col-md-3">
+                              <div class="form-group">
+                                <label for="id_begin_time" >BEGIN_TIME:</label>
+                                    {% if begintime %}
+                                        <input type="text" id="id_begin_time"  value="{{ begintime }}" class="form-control" maxlength="30" name="begin_time">
+                                    {% else %}
+                                        <input type="text" id="id_begin_time"  class="form-control" maxlength="30" name="begin_time">
+
+                                    {% endif %}
+                              </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                     <label for="id_begin_time" >END_TIME:</label>
+                                            {% if endtime %}
+                                                <input type="text" id="id_end_time"  value="{{ endtime }}" class="form-control" maxlength="30" name="end_time">
+                                            {% else %}
+                                                <input type="text" id="id_end_time"  class="form-control" maxlength="30" name="end_time">
+
+                                            {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                  <div class="form-group">
+                             <label for="id_countnum" >解析条数:</label>
+                                    <select id="id_countnum" class="form-control col-md-3" name = "countnum">
+                                        {% if countnum == 10 %}
+                                            <option selected="selected" value =10 >10</option>
+                                        {% else %}
+                                            <option value =10 >10</option>
+                                        {% endif %}
+                                        {% if countnum == 50 %}
+                                            <option selected="selected" value =50 >50</option>
+                                        {% else %}
+                                            <option value =50 >50</option>
+                                        {% endif %}
+                                        {% if countnum == 200 %}
+                                            <option selected="selected" value =200 >200</option>
+                                        {% else %}
+                                            <option value =200 >200</option>
+                                        {% endif %}
+
+                                    </select>
+                         </div>
+                            </div>
+
+
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 " >
+                              <button name="show_binary" class="btn btn-primary" value="1">show binary logs and DB</button >
+                            </div>
+                            <div class="col-md-3 " >
+                               <button title="只看binlog选择项，其它选项无视" name="parse_first" style="margin-top: 5px" class="btn btn-default col-md-12" value="1">查看解析前5条</button >
+                            </div>
+                            <div class="col-md-3 " >
+                                <button id="parse_binlog" style="margin-top: 5px" name="parse"  class="btn btn-success col-md-12" value="1">PARSE BINLOG FOR REDO</button >
+                            </div>
+                            <div class="col-md-3 " >
+                                <button name="parse_undo"  style="margin-top: 5px" class="btn btn-danger col-md-12" value="1">PARSE BINLOG FOR UNDO</button >
+                            </div>
+                        </div>
+
+              </div>
+
+        </div>
+         </div>
+        </form >
+
+        <div class="col-md-12" >
+            {% if info %}
+                <span style="color:red">{{ info }}</span>
+            {% endif %}
+        </div>
+
+        <div class="col-md-12" style="overflow: auto">
+
+
+        <table  class="table table-condensed" border="1">
+            {% for i in sqllist %}
+                <tr>
+                    <td>
+                        {{ forloop.counter }}
+                    </td>
+                    <td>
+                        <pre>{{ i }}</pre>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    {#    <button id="dict"  class="btn btn-success" value="1">test</button >#}
+
+
+{% endblock %}
+{% block script %}
+    {#        <script>#}
+    {#            function checknum() {#}
+    {#                var num = document.getElementById('id_begin_pos').value;#}
+    {#                if (num) {#}
+    {#                    if (!isNaN(num)) {#}
+    {#                        return true;#}
+    {#                    }#}
+    {#                    else {#}
+    {#                        alert('请输入正确的POS(数字)');#}
+    {#                        return false;#}
+    {#                    }#}
+    {#                }#}
+    {#            }#}
+    {##}
+    {#        </script>#}
+
+
+<script>
+
+function change_group(flag,selected_group,selected_host) {
+
+    var host_group = selected_group;
+    if (flag == -1) {
+        host_group = $("#id_select_group option:selected").val();
+    }
+{#    console.log(selected_group,selected_host)#}
+    var select_host = $("#select_host");
+    $(select_host).empty();
+    $(select_host).append('<option  id="select_host" value ="" selected disabled >---Select Host---</option>');
+
+    $.ajax({
+        url: '/dbmanage/mysql_admin/',
+        data: {'host_group': host_group},
+        success: function (ret) {
+            $.each(ret ,function(key,value){
+
+                var id = value.id;
+                var text = value.ip+":"+value.port+' '+value.explain;
+                if (id === selected_host){$(select_host).append('<option selected  value ="'+id+'" >'+text+'</option>')}
+                else{$(select_host).append('<option  value ="'+id+'" >'+text+'</option>')}
+            })
+        }
+    })
+}
+
+
+    </script>
+
+
+    <script>
+
+    change_group(-2,{{ select_group|default:0 }},{{ select_host }});
+{#    change_host(-1)#}
+
+
+</script>
+    <script>
+        jeDate({
+            dateCell:"#id_begin_time",
+            format:"YYYY-MM-DD hh:mm:ss",
+            isinitVal:true,
+            isTime:true, //isClear:false,
+            minDate:"2014-09-19 00:00:00",
+            okfun:function(val){alert(val)}
+        })
+
+    jeDate({
+            dateCell:"#id_end_time",
+            format:"YYYY-MM-DD hh:mm:ss",
+            isinitVal:true,
+            isTime:true, //isClear:false,
+            minDate:"2014-09-19 00:00:00",
+            okfun:function(val){alert(val)}
+        })
+    </script>
+
+    {#        <script>#}
+    {#            $(document).ready(function(){#}
+    {##}
+    {#                $('#dict').click(function(){#}
+    {#                    var dbtag = $('#ins').val()#}
+    {#                    $.getJSON("{% url 'test' %}",{'dbtag':dbtag},function(ret){#}
+    {#                        $.each(ret,function(i,n){#}
+    {#                            alert(n);#}
+    {#                        })#}
+    {#                    })#}
+    {#                })#}
+    {#            });#}
+    {#        </script>#}
+{% endblock %}

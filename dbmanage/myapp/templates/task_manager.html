@@ -1,0 +1,711 @@
+{% extends "include/base.html" %}
+{% load static %}
+{% block title %}
+    <title>TASK_MANAGER</title>
+{% endblock %}
+{% block name %}
+<style>
+    table {
+        table-layout: fixed;
+    }
+td{
+width:100%;
+word-break:keep-all;/* 不换行 */
+white-space:nowrap;/* 不换行 */
+overflow:hidden;/* 内容超出宽度时隐藏超出部分的内容 */
+text-overflow:ellipsis;/* 当对象内文本溢出时显示省略标记(...) ；需与overflow:hidden;一起使用。*/
+}
+
+th {
+background-color: #189AD6;
+color: red; }
+{#    .layui-layer {#}
+{#word-wrap: break-word;#}
+{#word-break: break-all; }#}
+</style>
+        <link rel="stylesheet" href="{% static 'plugins/iCheck/all.css' %}">
+        <link rel="stylesheet" href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bower_components/bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css' %}">
+        <script src="{% static 'plugins/iCheck/icheck.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+        <script src="{% static 'layer/layer.js' %}"></script>
+     <script src="{% static 'bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'bower_components/moment/min/moment-with-locales.min.js' %}"></script>
+
+    <script src="{% static 'bower_components/bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js' %}"></script>
+
+    欢迎使用任务管理功能
+{% endblock %}
+{%block db_content%}
+    <form role="form" method='post'>
+
+                    {% csrf_token %}
+                    CHOOSE:</br>
+                 <div class="col-md-12 no-padding">
+                  <div class="col-md-6 no-padding">
+                                 <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host|default:0 }}')" class="form-control col-md-12"  name = "select_group">
+                                    <option value ="" selected disabled >---Select Host Group---</option>
+                                        {% for group in host_group %}
+                                            {% if group.id == select_group %}
+                                                <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                            {% else %}
+                                                <option value ="{{ group.id }}">{{ group.name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                </select>
+
+                                <select  id="select_host" class="form-control col-md-12" name = "ins_set">
+                                    <option value ="" selected disabled >---Select Host ---</option>
+                                </select>
+                  </div>
+                 <div class="col-md-6 ">
+                      <h3>注意事项:</h3>
+                        <p> 1. 输出结果默认按时间倒序</p>
+                        <p> 2. 已执行成功的task状态不能修改</p>
+                        <p> 3. 默认返回最新50项任务</p>
+                </div>
+
+                 <div class="col-md-6 no-padding">
+                     <div class="col-md-6 no-padding">
+
+                        选择截止时间: {{ form.end }}
+                     </div>
+                      <div class="col-md-3 no-padding text-right">
+                        <button type="submit" name='commit_all' class="btn btn-primary">查询ALL</button >
+                     </div>
+                     <div class="col-md-3 no-padding text-right">
+                        <button type="submit" name='commit' class="btn btn-primary">查询任务</button >
+                     </div>
+                </div>
+
+        </div>
+
+        {% if nllflag %}
+            <br>
+            <span style="color:red"><strong> {{ nllflag }}</strong></span>
+        {% endif %}
+        {% if result %}
+<div class="col-md-12 row " style="overflow-x:auto; ">
+            <table id="mytable" class="table table-bordered table-condensed" border="1">
+                <thead>
+                <tr class="danger">
+                    {% for colname in col %}
+                        <th>{{ colname }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody  >
+                {% for item in result %}
+                    <tr class="{% if item.2 == 1 %} warning {% elif item.2 == 2 %} danger {% endif %}">
+                        {% for item_detail in item %}
+                            {% if forloop.counter == 6 %}
+                                <td> {{ item_detail|truncatechars:550|linebreaks }}</td>
+                            {% elif forloop.counter == 5 or forloop.counter == 2 %}
+                                <td> {{ item_detail|linebreaks}}</td>
+                            {% else %}
+                                <td> {{ item_detail }}</td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+</div>
+            {% endif %}
+
+        {% if result_status %}
+<div class="col-md-12 row " style="overflow-x:auto; ">
+            <table id="mytable2" class="table  table-bordered table-condensed" border="1">
+                <thead>
+                <tr class="danger">
+                    {% for colname in cols %}
+                         {% if forloop.counter == 12 %}
+                            <th style="width: 150px"> {{ colname }}</th>
+                         {% elif forloop.counter == 13 %}
+                            <th style="width: 150px"> {{ colname }}</th>
+                             {% elif forloop.counter == 8 %}
+                            <th style="width: 100px;word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"> {{ colname }}</th>
+                         {% elif colname == 'INFOMATION' %}
+                        <th style="width: 100px;word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"> {{ colname }}</th>
+                        {% else %}
+                             <th > {{ colname }}</th>
+                         {% endif %}
+
+
+
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody  >
+                {% for item in result_status %}
+                    <tr>
+                        {% if item.myid %}
+                            <td> {{ item.myid }}</td>
+                            <td> {{ item.stage }}</td>
+                            <td> {{ item.errlevel }}</td>
+                            <td> {{ item.stagestatus|linebreaks }}</td>
+                            <td class="errormessage"> {{ item.errormessage|linebreaks }}</td>
+                            <td> {{ item.sqltext|linebreaks }}</td>
+                            {#  <td> <a target="_blank" >{{ item.sqltext|linebreaks }}</a></td>#}
+                            <td> {{ item.affectrow }}</td>
+                            {#  <td> {{ item.sequence|truncatechars:10  }}</td>#}
+                            <td>
+                                {% if item.stagestatus|length == 40 %}
+                                    <button type="button" class="backup_sql" type="button" value="{{ item.sequence }}" title="点击查看备份语句"> {{ item.sequence  }}</button>
+                                {% else %}
+                                    {{ item.sequence }}
+                                {% endif %}
+                            </td>
+
+                            <td> {{ item.backup_db}}</td>
+                            <td> {{ item.execute_time }}</td>
+                            <td> {{ item.sqlsha|truncatechars:7 }}</td>
+                            <td > {{ item.create_time|date:"Y-m-d H:i:s"  }}</td>
+                            <td > {{ item.finish_time|date:"Y-m-d H:i:s"  }}</td>
+                        {% else %}
+                            {% for item_detail in item %}
+                                {% if forloop.counter == 6 %}
+                                    <td> {{ item_detail|linebreaks}}</td>
+                                {% elif forloop.counter == 7 %}
+                                    <td> {{ item_detail|truncatechars:150|linebreaks}}</td>
+                                {% else %}
+                                    <td> {{ item_detail }}</td>
+                                {% endif %}
+                            {% endfor %}
+                            {% if perms.myapp.can_admin_task %}
+                                {% if 'SQLSHA1' in cols %}
+                                    {% if '*' in item.2 %}
+                                        <td><button type="submit" name='stop' class="btn btn-danger" value={{ item.2 }}>停止</button></td>
+                                    {% endif %}
+                                {% elif 'TIME' in cols and 'STATE' in cols %}
+                                    <td><button type="submit" name='stop' class="btn btn-danger" value={{ item.0 }}>停止</button></td>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    </tr>
+
+                    {% if 'SQLSHA1' in cols %}
+                        <tr>
+                            {% if '*' in item.2 %}
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" aria-valuenow=item.3 aria-valuemin="0" aria-valuemax="100" style="width: {{ item.3 }}%;" >
+                                        {{ item.3 }}%
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </tr>
+                    {% endif %}
+
+                {% endfor %}
+                </tbody>
+            </table>
+</div>
+        {% endif %}
+        <br>
+        <br>
+{#        {% if datalist %}#}
+{#            {% include "include/pagejump/pagebutton.html" %}#}
+{#        {% endif %}#}
+
+
+    <body onload="checkstatus()" >
+
+<div class="col-md-12 row " style="overflow-x:auto; ">
+    <table id="mytable1" class="table table-bordered" border="2">
+                <thead>
+                <tr class="danger">
+                    <th style="width: 5px">ID</th>
+                    <th noWrap style="width: 80px">提交人</th>
+                    <th noWrap style="width: 80px">执行人</th>
+                    <th style="width: 120px">Instance</th>
+                    <th noWrap style="width: 5px">DB<br>Account<br>Role</th>
+                    <th>DB</th>
+                    <th noWrap style="width: 100px;word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">SQL语句</th>
+                    <th noWrap style="width: 120px">创建时间</th>
+                    <th noWrap style="width: 120px">修改时间</th>
+                    <th noWrap style="width: 60px">任务状态</th>
+                    <th noWrap style="width: 120px">预约时间</th>
+                    <th noWrap style="width: 60px">执行说明</th>
+                    <th noWrap style="width: 120px">备份状态</th>
+                    <th noWrap style="width: 35px">操作</th>
+                    <th noWrap style="width: 35px"></th>
+                    <th noWrap style="width: 35px"></th>
+
+                        <th noWrap style="width: 90px">计划</th>
+
+                    <th noWrap style="width: 35px"></th>
+                    <th noWrap style="width: 60px"></th>
+                </tr>
+                </thead>
+
+
+                <tbody  >
+                {% for item in datalist %}
+                    <tr>
+                        {#                    <td>{{ item.id }}  </td>#}
+                        <td noWrap>{{ item.id }} <input type="checkbox" size="100" name="choosedlist" value={{ item.id }}>  </td>
+                        <td> {{ item.user }}</td>
+                        <td>{{ item.operator }}</td>
+                        <td>{{ item.instance }}</td>
+                        <td>{{ item.db_account_role }}</td>
+                        <td> {{ item.dbtag }}</td>
+                        <td style="width: 100px;word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"> {{ item.sqltext }}</td>
+                        {#                    <td><input type=="text" class="form-control" name="accountname" value="{{ item.sqltext }}"></td>#}
+                        <td> {{ item.create_time|date:"Y-m-d H:i:s" }}</td>
+                        <td> {{ item.update_time|date:"Y-m-d H:i:s" }}</td>
+                        <td > {{ item.status }}</td>
+                        <td > {{ item.sche_time|date:"Y-m-d H:i" }}</td>
+                        <td >
+                            {{ item.specification|truncatechars:30|linebreaks}}
+                        </td>
+                        <td  noWrap>
+                            {% if item.backup_status == 1 %}
+                                需要备份
+                            {% elif item.backup_status == 0 %}
+                                无需备份
+                            {% elif item.backup_status == 2 %}
+                                <button  class="backup_info" type="button" value="{{ item.id }}" title="点击查看备份语句">已备份执行</button>
+                            {% endif %}
+
+                        </td>
+                        {% if perms.myapp.can_admin_task or perms.myapp.can_delete_task %}
+                            <td ><button type="submit" name='delete' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-primary" value={{ item.id }}>删除</button></td>
+                        {% endif %}
+                        <td><button type="submit" name='check' class="btn btn-warning" value={{ item.id }}>审核</button></td>
+                        {% if perms.myapp.can_admin_task %}
+                            <td><button type="submit" name='exec' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-danger" value={{ item.id }}>执行</button></td>
+                            <td><button class="period_task btn btn-success" type="button" name='appoint' value={{ item.id }}>预约时间执行</button></td>
+                        {% endif %}
+                        <td><button type="submit" name='see_running' class="btn btn-info" value={{ item.id }}>状态</button></td>
+                        <td><button type="submit" name='update' class="btn btn-warning" value={{ item.id }}>查询修改</button></td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+
+            <div class="row">
+                <div class="col-md-1">
+                    <select class="form-control" name = "charset">
+                        <option value ="UTF8">UTF8</option>
+                        <option value ="GB18030">GB18030</option>
+                    </select>
+                </div>
+                <div  class="col-md-1">
+                    <button type="submit" name='export_task' class="btn btn-warning"  onclick="return checkbox()"  >导出选中的任务</button>
+                </div>
+
+                <div class="modal fade" id="myModal"  style="width:100%;" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <form role="form" action="" method="post">
+                            {% csrf_token %}
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title">回滚语句</h4>
+                                </div>
+                                <div class="modal-body">
+
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div  class="col-md-12">
+                                                <table id="myTb"  class="table table-bordered" width="100%" >
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+                                </div>
+                            </div>
+                        </form>
+
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal -->
+                <div class="modal fade" id="periodModal"  style="width:100%;" tabindex="-1" role="dialog" aria-labelledby="periodModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title">PeriodicTask</h4>
+                                </div>
+                                <div class="modal-body">
+
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div  class="col-md-12">
+                                                   选择时间
+                                                <div class="input-group date"  id="id_period_date">
+                                                    <input unselectable="on" class="form-control" type="text" >
+                                                    <span class="input-group-addon" >
+                                                        <span class="glyphicon glyphicon-calendar"></span>
+                                                    </span>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="commit_period btn btn-default text-left">Commit</button>
+
+                                    <button type="button" id='id_close' class="btn btn-default" data-dismiss="modal">Close</button>
+
+                                </div>
+                            </div>
+    </div><!-- /.modal-content -->
+                </div><!-- /.modal -->
+
+
+            </div>
+
+{#        </body>#} </div>
+
+    </body>
+
+    </form>
+
+
+  <script type="text/javascript">
+
+
+            jeDate({
+                dateCell:"#id_end",
+                format:"YYYY-MM-DD hh:mm:ss",
+                isinitVal:true,
+                isTime:true, //isClear:false,
+                minDate:"2014-09-19 00:00:00",
+                okfun:function(val){alert(val)}
+            });
+
+
+        </script>
+
+
+                <script>
+
+{#                    jeDate({#}
+{#                        dateCell:"#id_sche_time",#}
+{#                        format:"YYYY-MM-DD hh:mm:ss",#}
+{#                        isinitVal:true,#}
+{#                        isTime:true, //isClear:false,#}
+{#                        minDate:"2014-09-19 00:00:00",#}
+{#                        okfun:function(val){alert(val)}#}
+{#                    })#}
+                    function checkstatus() {
+                        var tableId = document.getElementById("mytable");
+                        var str = "";
+                        for (var i = 1; i < tableId.rows.length; i++) {
+                            var value = tableId.rows[i].cells[7];
+                            if (value.innerText == "executed") {
+                                value.setAttribute("class", "success");
+
+                            }
+                            else if (value.innerText == "check passed") {
+                                value.setAttribute("class", "warning");
+
+                            }
+                            else if (value.innerText == "running") {
+                                value.setAttribute("class", "active");
+                            }
+                            else {
+                                value.setAttribute("class", "danger");
+                            }
+                            var sched = tableId.rows[i].cells[8];
+                            if (sched.innerText == "2199-01-01 00:00"){
+                                sched.innerText='NOT SCHEDULED';
+                                sched.setAttribute("class", "danger");
+
+                            }
+                            else{
+                                sched.setAttribute("class", "active");
+
+                            }
+                        }
+                    }
+                    function checkbox () {
+                        var str=document.getElementsByName("choosedlist");
+                        var n = str.length;
+                        var k = 0;
+                        for (var i=0; i<n;i++){
+                            if(str[i].checked){
+                                k = 1;
+                            }
+                        }
+                        if(k==0){
+                            alert("请勾选TASK!");
+                            return false;
+                        }
+                    }
+
+                </script>
+
+
+
+
+    <script type="text/javascript">
+
+
+        {#        var mystatus = document.getElementById("taskstatus");#}
+        {#        for (i=0;i<=mystatus.length-1;i++)#}
+        {#        {#}
+        {##}
+        {#            if (mystatus[i].innerHTML == 'check not passed') {#}
+        {#                mystatus[i].class = "bg-danger";#}
+        {#            }#}
+        {#        }#}
+        //jeDate.skin('gray');
+        {#        jeDate({#}
+        {#            dateCell:"#id_begin",#}
+        {#            format:"YYYY-MM-DD hh:mm:ss",#}
+        {#            isinitVal:true,#}
+        {#            isTime:true, //isClear:false,#}
+        {#            minDate:"2014-09-19 00:00:00",#}
+        {#            okfun:function(val){alert(val)}#}
+        {#        })#}
+        {#        jeDate({#}
+        {#            dateCell:"#id_end",#}
+        {#            format:"YYYY-MM-DD hh:mm:ss",#}
+        {#            isinitVal:true,#}
+        {#            isTime:true, //isClear:false,#}
+        {#            minDate:"2014-09-19 00:00:00",#}
+        {#            okfun:function(val){alert(val)}#}
+        {#        })#}
+    </script>
+{% endblock %}
+{% block script %}
+     <script>
+function change_group(flag,selected_group,selected_host) {
+
+    var host_group = selected_group;
+    if (flag == -1) {
+        host_group = $("#id_select_group option:selected").val();
+    }
+{#    console.log(selected_group,selected_host)#}
+    var select_host = $("#select_host");
+    $(select_host).empty();
+    $(select_host).append('<option  id="select_host" value ="" selected disabled >---Select Host---</option>');
+
+    $.ajax({
+        url: '/dbmanage/task/',
+        data: {'host_group': host_group},
+        success: function (ret) {
+            $.each(ret ,function(key,value){
+
+                var id = value.id;
+                var text = value.ip+":"+value.port+' '+value.explain;
+                if (id === selected_host){$(select_host).append('<option selected  value ="'+id+'" >'+text+'</option>')}
+                else{$(select_host).append('<option  value ="'+id+'" >'+text+'</option>')}
+            })
+        }
+    })
+}
+
+
+    </script>
+
+
+    <script>
+
+    change_group(-2,{{ select_group|default:0 }},{{ select_host }});
+{#    change_host(-1)#}
+
+
+</script>
+{#    {% include "include/pagejump/pagejump.html" %}#}
+        <script>
+        $(document).ready(function(){
+            $('#mytable').DataTable();
+        });
+    </script>
+    <script>
+        $(document).ready(function(){
+            $('#mytable1').DataTable({
+                "lengthMenu": [[5,25,100], [5,25,100]],
+                "order": []
+
+            });
+
+        });
+    </script>
+
+    <script>
+{#            jeDate({#}
+{#                dateCell:".period_date",#}
+{#                format:"YYYY-MM-DD hh:mm:ss",#}
+{#                isinitVal:true,#}
+{#                isTime:true, //isClear:false,#}
+{#                minDate:"2014-09-19 00:00:00",#}
+{#                okfun:function(val){alert(val)}#}
+{#                    });#}
+
+
+        $(document).ready(function(){
+            $('#myModal').modal({
+                keyboard: false,
+                show: false,
+                backdrop:false
+            })
+            $(document).on("click",'.backup_sql', function() {
+                {#            $('.backup_sql').on('click',function() {#}
+                var sequenceid = $(this).attr("value");
+                {#                alert(sequenceid);#}
+                $.get("{% url 'get_single_rollback' %}",{'sequenceid':sequenceid}).done(function (data) {
+                    $('#myModal').modal({
+                        show: true
+                    });
+                    $("#myTb").empty("");
+                    var tbHead = " <thead><tr><th width=\"5%\">ID</th><th width=\"95%;\">SQL</th></tr></thead><tbody>";
+                    $("#myTb").append(tbHead);
+                    for (var i =0 ; i <= data.length - 1; i++) {
+                        var tbBody = ""
+                        tbBody += "<tr><td>"+(i+1)+"</td><td style=\"word-wrap:break-word;\">" + data[i] +  "</td></tr>";
+                        $("#myTb").append(tbBody);
+
+                        {#                        $('#list_result').append(' ' + data[i]);#}
+                    };
+                    $("#myTb").append("</tbody>");
+                    $('#myTb').dataTable().fnDestroy();
+                    $('#myTb').DataTable({
+                        "lengthMenu": [[5,10], [5,10]],
+                        "order": []
+                    });
+
+                });
+            });
+
+            $('.backup_info').click(function(){
+                var taskid = $(this).attr("value");
+                $.get("{% url 'get_rollback' %}",{'taskid':taskid}).done(function (data) {
+                    $('#myModal').modal({
+                        show: true
+                    });
+                    $("#myTb").empty("");
+
+                    var tbHead = "<thead><tr><th width=\"5%\">ID</th><th width=\"95%\">SQL</th></tr></thead><tbody>";
+                    $("#myTb").append(tbHead);
+{#                    $("#myTb").children().style('width','95%')#}
+                    for (var i =0 ; i <= data.length - 1; i++) {
+                        var tbBody = ""
+                        tbBody += "<tr><td width=\"30\">"+(i+1)+"</td><td>" + data[i] +  "</td></tr>";
+                        $("#myTb").append(tbBody);
+
+                        $('#list_result').append(' ' + data[i]);
+                    };
+                    $("#myTb").append("</tbody>");
+                    $('#myTb').dataTable().fnDestroy();
+                    $('#myTb').DataTable();
+                });
+                return false;
+            });
+        });
+
+
+
+
+    </script>
+
+    <script>
+         $('#id_period_date').datetimepicker({
+                format: 'YYYY-MM-DD HH:mm',
+                sideBySide: true,
+                minDate: moment().add(5,'minutes'),
+                locale: moment.locale('zh-cn')
+              });
+
+{##}
+{#         console.log(moment())#}
+    $('#id_period_date').data('DateTimePicker').date(moment());
+{#    moment.tz.setDefault('Asia/Seoul'); //设置moment时区#}
+{#    $('#id_period_date').data('DateTimePicker').timeZone('Asia/Seoul'); //设置控件时区#}
+        var task_id = 0;
+         $('.period_task').click(function(){
+                var taskid = $(this).attr("value");
+                   $('#periodModal').modal({
+                        show: true
+                    });
+              task_id = taskid;
+                return false;
+            });
+
+        $('.commit_period').click(function() {
+            var period_date = moment($('#id_period_date').data('DateTimePicker').date()).format('x');
+
+
+            $.ajax({
+                url: '/dbmanage/change_task_period/',
+                data: {'taskid': task_id, 'period_date': period_date,csrfmiddlewaretoken: '{{ csrf_token }}'},
+                type: 'POST',
+                success: function (ret) {
+                    console.log(ret);
+                    $("#id_close").click();
+
+                    layer.alert(ret,
+                        {
+                            icon: func_icon(ret),
+                            skin: 'layui-layer-lan',//样式类名  自定义样式
+                            closeBtn: 1,  // 是否显示关闭按钮
+                            anim: 2//动画类型});
+                        },function(){
+                         history.go(0);
+                        });
+
+{#                    history.go(0);#}
+
+                }});
+
+        });
+
+
+        $(".errormessage").click(function(){
+            var text = $(this).html();
+{#            layer.open({#}
+{#            type: 1,#}
+{#            skin: 'layui-layer-rim', //加上边框#}
+{#            area: ['420px', '240px'], //宽高#}
+{#            content: text#}
+{#        });#}
+             layer.alert(text,
+                        {
+                            icon: func_icon(text),
+                            skin: 'layui-layer-lan',//样式类名  自定义样式
+                            closeBtn: 1,  // 是否显示关闭按钮
+                            anim: 2,//动画类型});,
+                            area: ['600px', '400px']
+                        });
+        })
+    function func_icon(result){
+            if (result === 'success'){
+                return 6
+            }
+            else {return 5}
+    }
+
+    </script>
+    <script type="text/javascript">
+
+    $(function () {
+        $("td").on("mouseenter",function() {
+            if (this.offsetWidth < this.scrollWidth) {
+                var that = this;
+                var text = $(this).text();
+                layer.tips(text.toString().replace(/;/g,";<br/>"), that,{
+                    tips: [2, '#3595CC'],
+                    area: ['300px', 'auto'],
+                    time: 5000
+                });
+            }
+        });
+    })
+</script>
+
+{% endblock %}

@@ -1,0 +1,112 @@
+{% load static %}
+{#<script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>#}
+{#<script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>#}
+<style>
+    table {
+        table-layout: fixed;
+    }
+td{
+width:100%;
+word-break:keep-all;/* 不换行 */
+white-space:nowrap;/* 不换行 */
+overflow:hidden;/* 内容超出宽度时隐藏超出部分的内容 */
+text-overflow:ellipsis;/* 当对象内文本溢出时显示省略标记(...) ；需与overflow:hidden;一起使用。*/
+}
+
+th {
+background-color: #189AD6;
+color: #0C0C0C; }
+{#    .layui-layer {#}
+{#word-wrap: break-word;#}
+{#word-break: break-all; }#}
+</style>
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h2 class="page-header">备份节点列表</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">备份节点列表</div>
+                        <div class="panel-body">
+                            <div class="dataTable_wrapper">
+                                <table class="table table-condensed table-bordered no-footer dataTable" border="1" id="dataTables-example">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>节点名称</th>
+                                            <th>IP</th>
+                                            <th>端口</th>
+                                            <th>帐号</th>
+                                            <th>密码</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for backnode in backnodes %}
+                                        <tr>
+                                            <td>{{ backnode.id }}</td>
+                                            <td>{{ backnode.name }}</td>
+                                            <td>{{ backnode.ip }}</td>
+                                            <td>{{ backnode.port }}</td>
+                                            <td>{{ backnode.user }}</td>
+                                            <td>{{ backnode.pass }}</td>
+                                            <td><a href="#"><li class="btn btn-sm btn-info" onclick="return tanchu('{{ backnode.id }}')" value="1">编辑</li></a></td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!--表格结束-->
+                </div>
+            </div>
+<input id="handle_status" value="" hidden="hidden">
+
+        </div>
+        <!-- /#page-wrapper -->
+
+     <!-- 表格搜索等调用 -->
+<script>
+function tanchu(n){
+    layer.open({
+    type: 2,
+    title: '修改备份节点',
+    closeBtn: 1,
+    area: ['500px', '340px'],
+    shadeClose: true, //点击遮罩关闭
+    content: ['/dbmanage/backup_manage/edit_backnode/' + n,],
+    end:function(){
+            var handle_status = $("#handle_status").val();
+            if ( handle_status === '1' ) {
+                $("#handle_status").val('');
+                layer.msg('保存成功！',{
+                    icon: 1,
+                    time: 2000 //2秒关闭（如果不配置，默认是3秒）
+                },function(){
+{#                    history.go(0);#}
+                });
+            } else if ( handle_status === '2' ) {
+                $("#handle_status").val('');
+                layer.msg('修改失败！',{
+                    icon: 2,
+                    time: 2000 //2秒关闭（如果不配置，默认是3秒）
+                },function(){
+{#                    history.go(0);#}
+                });
+            }
+        }
+  });
+}
+</script>
+{#    <script>#}
+{#        $(document).ready(function() {#}
+{#            $('#dataTables-example').DataTable({#}
+{#                    responsive: true#}
+{#            });#}
+{#        });#}
+{#    </script>#}
+

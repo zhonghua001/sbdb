@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load static %}
+{% block self_head_css_js %}
+  <script src="/static/layer/layer.js" xmlns="http://www.w3.org/1999/html"></script>
+    <link rel="stylesheet" href="{% static 'sql-editor/css/codemirror.css' %}" />
+    <link rel="stylesheet" href="{% static 'sql-editor/css/theme/dracula.css' %}" />
+    <link rel="stylesheet" href="{% static 'sql-editor/css/show-hint.css' %}" />
+    <script type="text/javascript" src="{% static 'sql-editor/js/codemirror.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sql-editor/js/sublime.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sql-editor/js/sql.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sql-editor/js/sql-hint.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sql-editor/js/show-hint.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sql-editor/js/formatting.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sql-editor/js/sql-formatter.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'sql-editor/js/sqlParser.js' %}"></script>
+    <style>
+     .CodeMirror {
+
+        font-size: 1.3rem;
+        font-family: Menlo, Monaco, Consolas, "Andale Mono", "lucida console", "Courier New", monospace;
+     }
+{#     .btn{#}
+{#    display: inline-block;#}
+{#    text-align: center;#}
+{#    background-color:#23bede;#}
+{#    padding: 10px 0;#}
+{#    width: 110px;#}
+{#    color: #FFF;#}
+{#    font-size: 16px;#}
+{#    border-radius: 3px;#}
+{#    border: none 0;#}
+{#    cursor: pointer;#}
+{#    line-height: normal;#}
+{#    outline: 0;#}
+{#    white-space: nowrap;#}
+{#    margin: .2rem;#}
+{#     }#}
+     #codeRun{
+         text-align: center;
+         background-color: #d8f0f5;
+     }
+     #handle {
+  background:#3d444c;
+  height: 20px;
+  user-select: none;
+  cursor: row-resize;
+  text-align: center;
+  line-height: 20px;
+}
+.arrow-v{
+    background-color: #161b1e;
+    display: inline-block;
+    width: 3rem;
+    height: inherit;
+    line-height: inherit;
+}
+svg{
+    vertical-align: middle;
+}
+#code{
+    min-height: 300px;
+}
+
+   .table-bordered>thead>tr>th, .table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>th, .table-bordered>thead>tr>td, .table-bordered>tbody>tr>td, .table-bordered>tfoot>tr>td {
+    border: 1px solid #ccc;
+}
+    .table-bordered {
+    border: 1px solid #ccc;
+}
+    </style>
+{#     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">#}
+{#        <script src="{% static 'bootstrap/js/jquery-3.1.1.min.js' %}"></script>#}
+{#        <link href="{% static 'bootstrap/css/bootstrap-theme.min.css' %}" rel="stylesheet">#}
+{#        <link href="{% static 'bootstrap/css/jquery.dataTables.min.css' %}" rel="stylesheet">#}
+{#        <!-- DataTables CSS -->#}
+        {#        <link href="{% static "datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" %}" rel="stylesheet">#}
+        {##}
+        {#        <!-- DataTables Responsive CSS -->#}
+        {#        <link href="{% static "datatables-responsive/css/dataTables.responsive.css" %}" rel="stylesheet">#}
+{##}
+{#        <link href="{% static 'bootstrap/js/jquery-3.1.1.min.js' %}" rel="stylesheet">#}
+{##}
+{#        <link href="{% static 'bootstrap/css/simple-sidebar.css' %}" rel="stylesheet">#}
+{#        <script src="{% static 'bootstrap/js/bootstrap.min.js' %}" rel="stylesheet"></script>#}
+{#        <script src="{% static 'bootstrap/js/jquery.dataTables.min.js' %}" rel="stylesheet"></script>#}
+{##}
+
+  <script src="{% static 'bootstrap/js/myfunc.js' %}" rel="stylesheet"></script>
+        <script src="{% static 'bootstrap/js/echarts.min.js' %}" rel="stylesheet"></script>
+        <script type="text/javascript" src="{% static 'jedate/jedate.js' %}"></script>
+        <script type="text/javascript" src="{% static 'jedate/extra.js' %}"></script>
+    <script src="{% static 'bower_components/select2/dist/js/select2.full.min.js' %}"></script>
+{% endblock %}
+
+ {% block content %}
+
+
+
+<div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            {% block name %}
+
+            {% endblock %}
+        </section>
+
+        <section class="content">
+            {% block db_content %}
+
+
+            {% endblock %}
+
+            {% block script %}
+            {% endblock %}
+        </section>
+
+        <!-- /.content -->
+    </div>
+
+
+    <script>
+        window.onload=init;
+        function init() {
+            showhide(7);
+        }
+        function showhide(n) {
+            var box = document.getElementById("config");
+            box.className="active";
+        }
+
+    </script>
+
+
+{% endblock %}
+
+
+
+
+
+<script>
+function checkSubmit() {
+    if (!confirm("确定修改？")) {
+        window.event.returnValue = false;
+    }
+}
+</script>
+<script>
+function get_token() {
+    $.post('/config/token/',{csrfmiddlewaretoken: '{{ csrf_token }}'},function(data){
+        document.getElementById("token").value = data;
+    });
+}
+</script>
+
+    <script>
+    function change_info(){
+        var args = $("#host_selector").serialize();
+        console.log(args)
+        window.location ='{% url "dbmanage" %}?' + args
+
+    }
+
+     function change_host(){
+        var args = $("#host_selector").serialize();
+        console.log(args)
+        window.location ='{% url "edit_conf" %}?' + args
+
+    }
+    </script>

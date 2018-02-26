@@ -1,0 +1,344 @@
+{% extends "include/base.html" %}
+{% block title %}
+    <title>TASK_UPDATE</title>
+{% endblock %}
+{% block name %}
+    TASK DETAIL
+{% endblock %}
+{%block db_content%}
+    {% if str %}
+        <h2><span style="color:red">{{ str }}</span></h2>
+    {% endif %}
+    <form role="form" method='post'>
+        {% csrf_token %}
+        {% if data %}
+            <table class="table table-condensed" border="1">
+                <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>{{ data.id }}</td>
+                </tr>
+
+                <tr>
+                    <td>USER</td>
+                    <td>{{ data.user }}</td>
+                </tr>
+
+                <tr>
+                    <td>DBTAG</td>
+
+                    {% if perms.myapp.can_see_inception or perms.myapp.can_update_task  or perms.myapp.can_admin_task %}
+{#                        {{ perms.myapp.fsdafdsfsdfsdfds }}#}
+                        <td>
+                            <div class="col-md-3 main">
+                               <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host|default:0 }}')" class="form-control col-md-12"  name = "select_group">
+                                <option value ="" selected disabled >---Select Host Group---</option>
+                                    {% for group in host_group %}
+                                        {% if group.id == select_group %}
+                                            <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                        {% else %}
+                                            <option value ="{{ group.id }}">{{ group.name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                            </select>
+
+                            <select  id="select_host" onchange="change_host(1)" class="form-control col-md-12" name = "ins_set">
+                                <option value ="" selected disabled >---Select Host ---</option>
+                            </select>
+                            </div>
+                           <div class="col-md-5 no-padding"   >
+                          <div class="box box-solid">
+                            <div class="box-header with-border">
+                              <h3 class="box-title text-center">Databases</h3>
+                            </div>
+                            <!-- /.box-header -->
+                            <div class="box-body">
+                              <div class="box-group" id="accordion">
+                                <!-- we are adding the .panel class so bootstrap.js collapse plugin detects it -->
+                                <div class="panel box box-primary">
+                                  <div class="box-header with-border">
+                                    <h4 class="box-title">
+                                      <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" class="collapsed">
+                                         Group 1
+                                      </a>
+                                    </h4>
+                                  </div>
+                                  <div id="collapseOne" class="panel-collapse collapse" aria-expanded="false" style="height: 0px;">
+                                    <div class="box-body">
+                                     <div id="id_form_write" class="form-group">
+
+                                        </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="panel box box-danger">
+                                  <div class="box-header with-border">
+                                    <h4 class="box-title">
+                                      <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" class="collapsed" aria-expanded="false">
+                                        Group 2
+                                      </a>
+                                    </h4>
+                                  </div>
+                                  <div id="collapseTwo" class="panel-collapse collapse" aria-expanded="false" style="height: 0px;">
+                                    <div class="box-body">
+                                      <div id='id_form_read_write' class="form-group">
+
+                                        </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="panel box box-success">
+                                  <div class="box-header with-border">
+                                    <h4 class="box-title">
+                                      <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" class="collapsed" aria-expanded="false">
+                                        Group 3
+                                      </a>
+                                    </h4>
+                                  </div>
+                                  <div id="collapseThree" class="panel-collapse collapse " aria-expanded="false">
+                                    <div class="box-body">
+                                       <div id="id_form_all" class="form-group">
+
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- /.box-body -->
+                          </div>
+                          <!-- /.box -->
+                        </div>
+                        </td>
+                    {% else %}
+                        <td>{{ data.dbtag }}</td>
+                    {% endif %}
+                </tr>
+
+                <tr>
+                    <td>创建时间</td>
+                    <td>{{ data.create_time|date:"Y-m-d H:i:s"  }}</td>
+                </tr>
+
+                <tr>
+                    <td>修改时间</td>
+                    <td>{{ data.update_time|date:"Y-m-d H:i:s"  }}</td>
+                </tr>
+                <tr>
+                    <td>任务状态</td>
+                    {% if perms.myapp.can_admin_task %}
+                        <td>
+                            <div class="col-md-3 main">
+                                <select class="form-control col-md-1" name = "status">
+                                    {% if data.status == 'executed'  %}
+                                        <option selected="selected" value ="executed">executed</option>
+                                    {% else  %}
+                                        <option  value ="executed">executed</option>
+                                    {% endif %}
+                                    {% if data.status == 'executed failed'  %}
+                                        <option selected="selected"  value ="executed failed">executed failed</option>
+                                    {% else  %}
+                                        <option  value ="executed failed">executed failed</option>
+                                    {% endif %}
+                                    {% if data.status == 'check not passed'  %}
+                                        <option selected="selected"  value ="check not passed">check not passed</option>
+                                    {% else  %}
+                                        <option  value ="check not passed">check not passed</option>
+                                    {% endif %}
+                                    {% if data.status == 'check passed'  %}
+                                        <option selected="selected"  value ="check passed">check passed</option>
+                                    {% else  %}
+                                        <option  value ="check passed">check passed</option>
+                                    {% endif %}
+                                    {% if data.status == 'running' %}
+                                        <option selected="selected"  value ="running">running</option>
+                                    {% else  %}
+                                        <option  value ="running">running</option>
+                                    {% endif %}
+
+                                    {% if data.status == 'appointed' %}
+                                        <option selected="selected"  value ="appointed">appointed</option>
+                                    {% else  %}
+                                        <option  value ="appointed">appointed</option>
+                                    {% endif %}
+                                    {% if data.status == 'NULL' %}
+                                        <option selected="selected"  value ="NULL">NULL</option>
+                                    {% else  %}
+                                        <option  value ="NULL">NULL</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+{#                            <input  type=="text" maxlength="20" value="{{ data.status }}" placeholder="input status here" name="status"> ('executed','executed failed','check not passed','check passed','running','appointed','NULL')#}
+                        </td>
+                    {% else %}
+                        <td>{{ data.status }}</td>
+                    {% endif %}
+
+
+                </tr>
+                {% if perms.myapp.can_update_task or perms.myapp.can_admin_task %}
+
+                    <tr>
+                        <td>SQL语句</td>
+                        <td>
+                            <textarea cols="40" rows="10" name="sqltext">{{ data.sqltext }}</textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>执行说明</td>
+                        <td>
+                            <textarea cols="40" rows="10" maxlength="30" placeholder="最多输入30个字，超过部分将会被截断" name="specify">{{ data.specification }}</textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>是否需要备份执行</td>
+                        <td>
+                            <select class="form-control"  name="ifbackup">
+                                {% if data.backup_status == 1 %}
+                                    <option value=1 selected="selected">需要备份</option>
+                                    <option value=0 >不需要备份</option>
+                                    <option value=2 >已备份执行</option>
+                                {% elif  data.backup_status == 0 %}
+                                    <option value=1 >需要备份</option>
+                                    <option value=0 selected="selected">不需要备份</option>
+                                    <option value=2 >已备份执行</option>
+                                {% elif  data.backup_status == 2 %}
+                                    <option value=1 >需要备份</option>
+                                    <option value=0 >不需要备份</option>
+                                    <option value=2 selected="selected">已备份执行</option>
+                                {% endif %}
+                            </select>
+                        </td>
+                    </tr>
+
+                {% else %}
+                    <tr>
+                        <td>SQL语句</td>
+                        <td>{{ data.sqltext }}</td>
+                    </tr>
+                    <tr>
+                        <td>执行说明</td>
+                        <td>{{ data.specification }}</td>
+                    </tr>
+                    <tr>
+                        <td>是否需要备份执行</td>
+                        <td>
+                            {% if data.backup_status  == 1 %}
+                                需要备份
+                            {% elif data.backup_status  == 0 %}
+                                无需备份
+                            {% elif data.backup_status  == 2 %}
+                                已备份执行
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endif %}
+
+                </tbody>
+            </table>
+
+{#            {% if perms.myapp.can_update_task or perms.myapp.can_admin_task  %}#}
+                <td><button type="submit" name='update' onclick="return confirm('PLEASE COMFIRM')"  class="btn btn-warning">更新sql相关信息</button></td>
+{#            {% endif %}#}
+
+        {% endif %}
+    </form>
+
+
+    <script>
+function change_host(flag) {
+
+
+    var select_host = $("#select_host");
+    var instance_id = select_host.val();
+
+    $("#id_form_write").empty();
+    $("#id_form_write_write").empty();
+    $("#id_form_all").empty();
+
+    $("#collapseOne").collapse('hide');
+    $("#collapseTwo").collapse('hide');
+    $("#collapseThree").collapse('hide');
+    if (instance_id === null){
+        instance_id = "{{ select_host }}"
+    }
+
+    $.getJSON('/dbmanage/update_task/', {'instance_id': instance_id}, function (ret) {
+
+        $.each(ret, function(key,value){
+            v = value.db_account_id
+            var text = value.db_name+' ['+value.db_tag+']';
+
+                var html =  '<div class="radio"> \
+                             <label> \
+                             <input type="radio" name="optionsRadios" id="optionsRadios'+key+'" value="'+v+':'+value.db_name+'" > \
+                               '+text+'\
+                            </label> \
+                          </div>'
+
+            $('#id_form_'+value.db_account_role).append(html);
+        });
+        var select_db_name = "{{ db_name|default_if_none:'0' }}"
+        var select_db_account_id = "{{ db_account.id|default_if_none:'0' }}"
+        console.log(select_db_name,select_db_account_id)
+        if ( select_db_name !== 0 && select_db_account_id !== 0 && flag === -1){
+            var r = document.getElementsByName('optionsRadios')
+            for (var i=0;i<r.length;i++){
+                if ($("#"+r[i].id).val() === select_db_account_id+':'+select_db_name){
+                     $("#"+r[i].id).attr("checked",true);
+                     $("#"+r[i].id).parent().parent().parent().parent().parent().collapse('show');
+                }
+            }
+
+        }else{
+            var d =  document.getElementsByName('optionsRadios');
+            for (var i=0;i<1;i++){
+               $("#"+d[i].id).attr("checked",true);
+               $("#"+d[i].id).parent().parent().parent().parent().parent().collapse('show');
+                console.log()
+
+        }
+        }
+
+    })
+}
+
+
+function change_group(flag,selected_group,selected_host) {
+
+    var host_group = selected_group;
+    if (flag == -1) {
+        host_group = $("#id_select_group option:selected").val();
+    }
+{#    console.log(selected_group,selected_host)#}
+    var select_host = $("#select_host");
+    $(select_host).empty();
+    $(select_host).append('<option  id="select_host" value ="" selected disabled >---Select Host---</option>');
+
+    $.ajax({
+        url: '/dbmanage/update_task/',
+        data: {'host_group': host_group},
+        success: function (ret) {
+            $.each(ret ,function(key,value){
+
+                var id = value.id;
+                var text = value.ip+":"+value.port+' '+value.explain;
+                if (id === selected_host){$(select_host).append('<option selected  value ="'+id+'" >'+text+'</option>')}
+                else{$(select_host).append('<option  value ="'+id+'" >'+text+'</option>')}
+            })
+        }
+    })
+}
+
+
+    </script>
+
+
+    <script>
+
+    change_group(-2,{{ select_group|default:0 }},{{ select_host }});
+    change_host(-1)
+    </script>
+
+{% endblock %}
+

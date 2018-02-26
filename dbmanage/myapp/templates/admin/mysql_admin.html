@@ -1,0 +1,576 @@
+{% extends "include/base.html" %}
+{% load static %}
+{% block title %}
+    <title>INS STATUS</title>
+{% endblock %}
+{% block name %}
+    欢迎使用MySQL<span style="color:red">实例状态查询</span>功能
+{% endblock %}
+{%block db_content%}
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}"  media="all">
+    <link rel="stylesheet" href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}">
+<script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+<style>
+
+        th{
+            color: #0b3e6f;
+            font-size:15px;
+
+        }
+
+        table, th, td,tr
+        {
+        border: 1px;
+        }
+
+    #example1_length{
+
+    }
+.layui-nav * {
+    font-size: 13px;
+}
+</style>
+
+<div id="wrapper">
+    <div class="layui-tab layui-tab-card">
+      <ul class="layui-tab-title">
+        <li class="layui-this">基本信息</li>
+        <li>PT-TOOL</li>
+      </ul>
+      <div class="layui-tab-content" style="height: 800px;">
+
+{#             <form role="form" method='post'>#}
+            {% csrf_token %}
+    {#            {% include "include/sidebar.html" %}#}
+            <div id="page-content-wrapper">
+                <div class="col-md-12 no-padding">
+                    <div class="col-md-6 no-padding">
+                         <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host|default:0 }}')" class="form-control col-md-12"  name = "select_group">
+                            <option value ="" selected disabled >---Select Host Group---</option>
+                                {% for group in host_group %}
+                                    {% if group.id == select_group %}
+                                        <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                    {% else %}
+                                        <option value ="{{ group.id }}">{{ group.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 ">
+                        <select  id="select_host" class="form-control col-md-12" name = "ins_set">
+                            <option value ="" selected disabled >---Select Host ---</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+<div class="layui-tab-item layui-show">
+    <div class="layui-col-xs2">
+        <div class=" layui-col-xs12 layui-side-scroll  no-padding" style="margin-top: 10px">
+    <!-- 左侧子菜单 -->
+            <ul class="layui-nav  layui-nav-tree" style="width: 240px">
+              <li class="layui-nav-item ">
+                <a  onclick="query('fullpro')" href="#">SHOW FULL PROCESSLIST</a>
+              </li>
+              <li class="layui-nav-item ">
+                 <a  onclick="query('showactive')" href="#">SHOW ACTIVE</a>
+              </li>
+
+              <li class="layui-nav-item ">
+                 <a  onclick="query('showengine')" title="SHOW ENGINE INNODB STATUS" href="#">SHOW ENGINE INNODB STATUS</a>
+              </li>
+              <li class="layui-nav-item ">
+                <a  onclick="query('showmutex')" href="#">SHOW ENGINE INNODB MUTEX</a>
+              </li>
+              <li class="layui-nav-item ">
+                 <a  onclick="query('slavestatus')" href="#">SHOW SLAVE STATUS</a>
+              </li>
+              <li class="layui-nav-item ">
+                <a  onclick="query('showbigtb')" href="#">SHOW TOP 20 BIGTABLES</a>
+              </li>
+                <li class="layui-nav-item ">
+                <a  onclick="query('showinc')" title="SHOW TOP 100 AUTO_INCREMENT USED" href="#">SHOW TOP 100 AUTO_INCREMENT USED</a>
+              </li>
+
+
+                            <input type="text" id='id_search_value' class="form-control" maxlength="25" placeholder="input search value here" value="{{ vir }}" name="variables">
+
+
+                <li class="layui-nav-item ">
+                  <a  onclick="query('showstatus')" href="#">SHOW SYSTEM STATUS</a>
+                </li>
+                <li class="layui-nav-item ">
+                    <a  onclick="query('showvari')" href="#">SHOW SYSTEM VARIABLES</a>
+                </li>
+                <li class="layui-nav-item ">
+                    <a  onclick="query('search')" href="#">IP SEARCH</a>
+                </li>
+
+    {% if selfsql %}
+                            <textarea cols="40" style="resize: none" rows="3" maxlength="100" placeholder="input sentence here" name="selfsql">{{ selfsql }}</textarea>
+
+                        {% else %}
+                            <textarea cols="40" style="resize: none" rows="3" maxlength="100" placeholder="input sentence here" name="selfsql"></textarea>
+                        {% endif %}
+
+    {#                            <button type="submit" name='execute' class="btn btn-danger" value="1">执行</button >#}
+    <li class="layui-nav-item ">
+                <a  onclick="query('execute')" href="#">IP 执行</a>
+              </li>
+
+
+            </ul>
+         </div>
+    </div>
+</div>
+
+ <div class="layui-tab-item">
+     <div class="layui-col-xs2">
+        <div class=" layui-col-xs12 layui-side-scroll  no-padding" style="margin-top: 10px">
+    <!-- 左侧子菜单 -->
+            <ul class="layui-nav  layui-nav-tree" style="width: 240px">
+              <li class="layui-nav-item ">
+                <a  onclick="query('pt-variable-advisor')" href="#">PT-Variables-Advisor</a>
+              </li>
+              <li class="layui-nav-item ">
+                 <a  onclick="query('showactive')" href="#">SHOW ACTIVE</a>
+              </li>
+
+              <li class="layui-nav-item ">
+                 <a  onclick="query('showengine')" title="SHOW ENGINE INNODB STATUS" href="#">SHOW ENGINE INNODB STATUS</a>
+              </li>
+              <li class="layui-nav-item ">
+                <a  onclick="query('showmutex')" href="#">SHOW ENGINE INNODB MUTEX</a>
+              </li>
+              <li class="layui-nav-item ">
+                 <a  onclick="query('slavestatus')" href="#">SHOW SLAVE STATUS</a>
+              </li>
+              <li class="layui-nav-item ">
+                <a  onclick="query('showbigtb')" href="#">SHOW TOP 20 BIGTABLES</a>
+              </li>
+                <li class="layui-nav-item ">
+                <a  onclick="query('showinc')" title="SHOW TOP 100 AUTO_INCREMENT USED" href="#">SHOW TOP 100 AUTO_INCREMENT USED</a>
+              </li>
+
+
+                            <input type="text" id='id_search_value' class="form-control" maxlength="25" placeholder="input search value here" value="{{ vir }}" name="variables">
+
+
+                <li class="layui-nav-item ">
+                  <a  onclick="query('showstatus')" href="#">SHOW SYSTEM STATUS</a>
+                </li>
+                <li class="layui-nav-item ">
+                    <a  onclick="query('showvari')" href="#">SHOW SYSTEM VARIABLES</a>
+                </li>
+                <li class="layui-nav-item ">
+                    <a  onclick="query('search')" href="#">IP SEARCH</a>
+                </li>
+
+    {% if selfsql %}
+                            <textarea cols="40" style="resize: none" rows="3" maxlength="100" placeholder="input sentence here" name="selfsql">{{ selfsql }}</textarea>
+
+                        {% else %}
+                            <textarea cols="40" style="resize: none" rows="3" maxlength="100" placeholder="input sentence here" name="selfsql"></textarea>
+                        {% endif %}
+
+    {#                            <button type="submit" name='execute' class="btn btn-danger" value="1">执行</button >#}
+    <li class="layui-nav-item ">
+                <a  onclick="query('execute')" href="#">IP 执行</a>
+              </li>
+
+
+            </ul>
+         </div>
+    </div>
+
+</div>
+
+
+
+    <div class="col-md-10">
+
+    <div class="box " style="margin-top: 10px;height: auto">
+            <div class="box-header with-border">
+              <h3 class="box-title">Result</h3>
+            </div>
+            <div id='id_box' class="box-body" style="max-height:600px;overflow:auto;">
+
+                    <table id="mytable" class="table table-condensed table-bordered" border="1"  style=" width: 100%;">   </table>
+
+
+    {#          Start creating your amazing application!#}
+            </div>
+            <!-- /.box-body -->
+            <div id='id_box_footer' class="box-footer">
+    {#          Footer#}
+            </div>
+            <!-- /.box-footer-->
+          </div>
+
+
+
+    {#                <strong> <span style="color:red">{{ info }}</span></strong>#}
+    {#                <hr/>#}
+    {#                <strong> <span style="color:red">SELF DB_SET</span></strong>#}
+    {#                    <table class="table table-condensed" border="1">#}
+    {#                        <thead>#}
+    {#                        <tr class="danger">#}
+    {#                            <th>BRO_INS</th>#}
+    {#                        </tr>#}
+    {#                        </thead>#}
+    {#                        <tbody  >#}
+    {#                        {% for item in bro %}#}
+    {#                            <tr>#}
+    {##}
+    {#                                <td>{{ item.ip}}+{{ item.port }} + {{ item.role }}</td>#}
+    {#                            </tr>#}
+    {#                        {% endfor %}#}
+    {#                        </tbody>#}
+    {#                    </table>#}
+
+
+
+                </div>
+
+{#            </form >#}
+
+
+
+      </div>
+    </div>
+
+</div>
+
+
+
+{% endblock %}
+{% block script %}
+{#    {% include "include/pagejump/pagejump.html" %}#}
+
+<script>
+
+function all_check(id) {
+
+    function box_name(idx){
+        switch (idx) {
+            case 'id_all':
+                return 'all_box';
+            case 'id_all_read':
+                return 'all_read_box';
+            case 'id_all_write':
+                return 'all_write_box';
+            case 'id_all_all':
+                return 'all_all_box';
+            case 'id_all_read_write':
+                return 'all_read_write_box';
+        }
+}
+
+
+     var nn = $("#"+id).is(":checked"); //判断th中的checkbox是否被选中，如果被选中则nn为true，反之为false
+    console.log(nn)
+     var namebox = $("input[name^="+box_name(id)+"]");
+
+{#             console.log(id,box_name(id))#}
+         if(nn === true) {
+               //获取name值为boxs的所有input
+             for(i = 0; i < namebox.length; i++) {
+                 if( namebox[i].disabled === false){
+
+                     namebox[i].checked=true; }    //js操作选中checkbox
+             }
+         }
+         if(nn === false) {
+
+             for(i = 0; i < namebox.length; i++) {
+                 namebox[i].checked=false;
+             }
+         }
+     }
+
+
+</script>
+
+<script>
+{#    var dataSet = [['fsdfdsfds',3213],[321321,444]];#}
+    var columns = [{'title':'说明'}];
+    $('#mytable').DataTable({
+{#        "columnDefs": [#}
+{#            {"orderable": false, "targets": [0,7,8,9,10]}#}
+{#        ],#}
+{#        "aoColumnDefs": [#}
+{#            { "bSearchable": false, "bVisible": false, "aTargets": [ 2 ] },#}
+{#            { "bVisible": false, "aTargets": [ 1,2,3,4,5,6,7,8,9,10,11,12 ] }#}
+{#         ] ,#}
+        language: {
+                        lengthMenu: '<select class="form-control input-xsmall">' + '<option  value="5">5</option>' + '<option value="10">10</option>' + '<option value="20">20</option>' + '<option value="30">30</option>' + '<option value="40">40</option>' + '<option value="50">50</option>' + '</select>条记录',//左上角的分页大小显示。
+                        search: '<span class="label label-primary" style="font-size: 100%;font-weight:0;">搜索：</span>',//右上角的搜索文本，可以写html标签
+
+                        paginate: {//分页的样式内容。
+                        previous: "上一页",
+                        next: "下一页",
+                        first: "第一页",
+                        last: "最后"
+                    },
+
+                    zeroRecords: "没有内容,选择左侧导航栏，进行查询",//table tbody内容为空时，tbody的内容。
+                    //下面三者构成了总体的左下角的内容。
+                    info: "总共_PAGES_ 页，显示第_START_ 到第 _END_ ，筛选之后得到 _TOTAL_ 条，初始_MAX_ 条 ",//左下角的信息显示，大写的词为关键字。
+                    infoEmpty: "0条记录",//筛选为空时左下角的显示。
+                    infoFiltered: ""//筛选之后的左下角筛选提示，
+                    },
+                paging: true,
+                pagingType: "full_numbers",//分页样式的类型
+
+{#                    data: dataSet,#}
+                    columns:  columns
+    })
+    .column( '0:visible' )
+    .order( 'asc' )
+    .draw();
+
+    $("#mytable_filter input[type=search]").css({ width: "300px" });//右上角的默认搜索文本框，不写这个就超出去了。
+</script>
+
+
+
+
+<script>
+function change_group(flag,selected_group,selected_host) {
+
+    var host_group = selected_group;
+    if (flag == -1) {
+        host_group = $("#id_select_group option:selected").val();
+    }
+{#    console.log(selected_group,selected_host)#}
+    var select_host = $("#select_host");
+    $(select_host).empty();
+    $(select_host).append('<option  id="select_host" value ="" selected disabled >---Select Host---</option>');
+
+    $.ajax({
+        url: '/dbmanage/mysql_admin/',
+        data: {'host_group': host_group},
+        success: function (ret) {
+            $.each(ret ,function(key,value){
+
+                var id = value.id;
+                var text = value.ip+":"+value.port+' '+value.explain;
+                if (id === selected_host){$(select_host).append('<option selected  value ="'+id+'" >'+text+'</option>')}
+                else{$(select_host).append('<option  value ="'+id+'" >'+text+'</option>')}
+            })
+        }
+    })
+}
+
+
+    </script>
+
+
+    <script>
+
+    change_group(-2,{{ select_group|default:0 }},{{ select_host }});
+{#    change_host(-1)#}
+
+
+</script>
+
+{#    <script>#}
+{#        function aa(event){#}
+{#            var data = [];#}
+{#            if (event === 'kill_list'){#}
+{#         var namebox = $("input[name^='all_all_box']");#}
+{#         var rows = document.getElementById("mytable").rows;#}
+{#         var allcheckbox_count = 0;#}
+{#         for(i = 0; i < namebox.length; i++) {#}
+{#            if (namebox[i].checked === true){#}
+{#                var row = namebox[i].parentElement.parentElement.rowIndex;#}
+{#                var row_data = {};#}
+{#                row_data['process_id']=rows[row].cells[0].innerText.replace(/\n/g, "");#}
+{#                row_data['user']=rows[row].cells[1].innerText.replace(/\n/g, "");#}
+{#                row_data['host']=rows[row].cells[2].innerText.replace(/\n/g, "");#}
+{#                row_data['db']=rows[row].cells[3].innerText.replace(/\n/g, "");#}
+{#                row_data['command']=rows[row].cells[4].innerText.replace(/\n/g, "");#}
+{#                row_data['time']=rows[row].cells[5].innerText.replace(/\n/g, "");#}
+{#                row_data['state']=rows[row].cells[6].innerText.replace(/\n/g, "");#}
+{#                row_data['info']=rows[row].cells[7].innerText;#}
+{#                console.log(row_data);#}
+{##}
+{#                allcheckbox_count =+ 1;#}
+{#                data.push(row_data)#}
+{#            }#}
+{#         }#}
+{#         if(data.length === 0){alert('select checkbox first')}#}
+{#     }#}
+{#        }#}
+{#    </script>#}
+
+
+
+    <script>
+function query(event){
+{#    console.log(event);#}
+    var instance_id = $("#select_host").val();
+{#    console.log(instance_id)#}
+    if (instance_id === null){
+         alert('Choise host')
+        return}
+    var search_value = $("#id_search_value").val();
+    console.log(search_value)
+    var data = [];
+    if (event === 'kill_list'){
+         var namebox = $("input[name^='all_all_box']");
+         var rows = document.getElementById("mytable").rows;
+         var allcheckbox_count = 0;
+         for(i = 0; i < namebox.length; i++) {
+            if (namebox[i].checked === true){
+                var row = namebox[i].parentElement.parentElement.rowIndex;
+                var row_data = {};
+                row_data['process_id']=rows[row].cells[0].innerText.replace(/\n/g, "");
+                row_data['user']=rows[row].cells[1].innerText.replace(/\n/g, "");
+                row_data['host']=rows[row].cells[2].innerText.replace(/\n/g, "");
+                row_data['db']=rows[row].cells[3].innerText.replace(/\n/g, "");
+                row_data['command']=rows[row].cells[4].innerText.replace(/\n/g, "");
+                row_data['time']=rows[row].cells[5].innerText.replace(/\n/g, "");
+                row_data['state']=rows[row].cells[6].innerText.replace(/\n/g, "");
+                row_data['info']=rows[row].cells[7].innerText;
+{#                console.log(row_data);#}
+
+                allcheckbox_count =+ 1;
+                data.push(row_data)
+            }
+         }
+         if(data.length === 0){alert('select checkbox first')}
+     }
+
+    $.ajax({
+           type: "POST",
+           url: "{% url 'mysql_admin' %}",
+           data: {'instance_id': instance_id[0], 'event': event,'kill_list':JSON.stringify(data),'variables':search_value,csrfmiddlewaretoken: '{{ csrf_token }}'},
+           dataType:"json",
+           success: function(result){
+
+                $("#id_box_footer").empty();
+                if ((event === 'fullpro' || event === 'showactive') && result.col_list[0].title !== 'error'){ $("#id_box_footer").append('<button  type="button" class="btn btn-danger btn-lg"onclick="query(\'kill_list\');">Kill Process</button>')}
+                var dataSet = result.data_list;
+                var columns = result.col_list;
+{#                console.log(dataSet)#}
+{#                console.log(columns)#}
+                var example = $('#mytable');
+                if (example.hasClass('dataTable')) {
+                    var oldTable = example.dataTable();
+                    oldTable.fnClearTable(); //清空一下table
+                    oldTable.fnDestroy(); //还原初始化了的dataTable
+                    example.empty();
+}
+
+                example.DataTable({
+            {#        "columnDefs": [#}
+            {#            {"orderable": false, "targets": [0,7,8,9,10]}#}
+            {#        ],#}
+{#                    "aoColumnDefs": [#}
+{#                        { "bSearchable": false, "bVisible": false, "aTargets": [ 2 ] },#}
+{#                        { "bVisible": false, "aTargets": [8,9,10,11,12] }#}
+{#                     ] ,#}
+                    language: {
+                                    lengthMenu: '<select class="form-control input-xsmall">' + '<option  value="5">5</option>' + '<option value="10">10</option>' + '<option value="20">20</option>' + '<option value="30">30</option>' + '<option value="40">40</option>' + '<option value="50">50</option>' + '</select>条记录',//左上角的分页大小显示。
+                                    search: '<span class="label label-primary" style="font-size: 100%;font-weight:0;">搜索：</span>',//右上角的搜索文本，可以写html标签
+
+                                    paginate: {//分页的样式内容。
+                                    previous: "上一页",
+                                    next: "下一页",
+                                    first: "第一页",
+                                    last: "最后"
+                                },
+
+                                zeroRecords: "没有内容,选择左侧导航栏，进行查询",//table tbody内容为空时，tbody的内容。
+                                //下面三者构成了总体的左下角的内容。
+                                info: "总共_PAGES_ 页，显示第_START_ 到第 _END_ ，筛选之后得到 _TOTAL_ 条，初始_MAX_ 条 ",//左下角的信息显示，大写的词为关键字。
+                                infoEmpty: "0条记录",//筛选为空时左下角的显示。
+                                infoFiltered: ""//筛选之后的左下角筛选提示，
+                                },
+                            paging: true,
+                            pagingType: "full_numbers",//分页样式的类型
+
+                                data: dataSet,
+                                columns:  columns
+                })
+{#                .column( '0:visible' )#}
+{#                .order( 'asc' )#}
+                .draw();
+                $("#mytable_filter input[type=search]").css({ width: "300px" });//右上角的默认搜索文本框，不写这个就超出去了。
+
+
+           },
+           error: function(result){
+               console.log()
+{#                $("#id_box").empty();#}
+{#               $('#id_box').append(result.tbody_html)#}
+              //请求失败之后的操作
+           }
+    });
+
+}
+
+
+
+    function choose_all(){
+        var obj = document.getElementsByName("choosedlist");
+        var n = obj.length;
+        var i;
+        for (i=0;i<n;i++){
+            obj[i].checked=true;
+        }
+    }
+        $("#menu-toggle").click(function(e) {
+            e.preventDefault();
+            $("#wrapper").toggleClass("toggled");
+        });
+        function record_cookie() {
+            var fav = document.getElementById("id_favword");
+            myfav =escape(fav.value);
+            {#            myfav = fav.value.replace(/\n/g,"^");#}
+            var expires = new Date();
+            expires.setTime(expires.getTime() + 3500000);
+            pathstr = ';path=/';
+            {#            alert(myfav);#}
+            document.cookie = "myfavword"+"="+myfav+pathstr+';expires='+expires.toGMTString();
+        }
+
+        function showfav() {
+            var fav = document.getElementById("id_favword");
+            myfav =unescape(fav.value);
+            fav.value = myfav;
+        }
+    </script>
+
+
+<script src="{% static  'layui/layui.all.js' %}" charset="utf-8"></script>
+<!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
+<script>
+layui.use('element', function(){
+  var element = layui.element; //导航的hover效果、二级菜单等功能，需要依赖element模块
+
+  //监听导航点击
+{#  element.on('nav(demo)', function(elem){#}
+{#    //console.log(elem)#}
+{#    layer.msg(elem.text());#}
+{#  });#}
+});
+</script>
+     <script type="text/javascript">
+
+    $(function () {
+        $("td").on("mouseenter",function() {
+            if (this.offsetWidth < this.scrollWidth) {
+                var that = this;
+                var text = $(this).text();
+                layer.tips(text.toString().replace(/;/g,";<br/>"), that,{
+                    tips: [2, '#3595CC'],
+                    area: ['300px', 'auto'],
+                    time: 5000
+                });
+            }
+        });
+    })
+</script>
+{% endblock %}

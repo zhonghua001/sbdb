@@ -1,0 +1,10 @@
+{
+  "backup" : [
+    "/path/to/include"
+  ],
+  "exclude" : [
+    "*.extension.to.exclude",
+    "*.another.extension",
+    "/path/to/exclude"
+  ]
+}

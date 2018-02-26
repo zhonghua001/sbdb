@@ -1,0 +1,501 @@
+{% extends "include/base.html" %}
+{% load static %}
+{% block title %}
+    <title>MySQL_QUERY</title>
+{% endblock %}
+{% block name %}
+    欢迎使用MySQL数据库<span style="color:red">查询</span>功能
+
+ <link rel="stylesheet" href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bower_components/bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css' %}">
+        <script src="{% static 'plugins/iCheck/icheck.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+{% endblock %}
+{%block db_content%}
+    <div id="wrapper">
+
+
+        <div id="page-content-wrapper">
+            <form role="form" method='post'>
+                {% csrf_token %}
+
+                            CHOOSE :
+                            <br>
+                    <div class="col-md-8 main">
+                        <div class="col-md-12 no-padding">
+                             <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host|default:0 }}')" class="form-control col-md-12"  name = "select_group">
+                                <option value ="" selected disabled >---Select Host Group---</option>
+                                    {% for group in host_group %}
+                                        {% if group.id == select_group %}
+                                            <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                        {% else %}
+                                            <option value ="{{ group.id }}">{{ group.name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                            </select>
+
+                            <select  id="select_host" onchange="change_host(1)" class="form-control col-md-12" name = "ins_set">
+                                <option value ="" selected disabled >---Select Host ---</option>
+                            </select>
+                        </div>
+
+
+                         <div class="col-md-12 " style="padding: 0">
+                            请在下面输入查询语句:</br>
+
+                                 {{ form.a }}
+                          <div id="handle">
+                                 <div class="arrow-v">
+                                <svg t="1506317058000" class="icon" style="" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="989" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16"><defs><style type="text/css"></style></defs><path d="M701.259294 726.618353l43.128471 42.044235-232.387765 238.230588-232.387765-238.170353 43.128471-42.044235 159.141647 163.056941 0-755.471059-159.141647 163.117176-43.128471-42.104471 232.387765-238.170353 232.387765 238.170353-43.128471 42.044235-159.141647-163.056941 0 755.531294 159.141647-163.177412z" p-id="990" fill="#fff"></path></svg>
+                                </div>
+                            </div>
+                        <div id="codeRun">
+{#                            <button class="btn btnRun">执行</button>#}
+                            <button type="button" class="btn btn-primary" id='format'>格式化</button>
+                        </div>
+
+                            <button type="submit" name='query' class="btn btn-primary" value="1">提交</button >
+                            <button type="submit" name='explain' class="btn btn-info" value="1">查看执行计划</button>
+                            {% if perms.myapp.can_export %}
+                                <button type="submit" name='export' class="btn btn-warning" value="1">导出CSV</button>
+                            {% endif %}
+                            <button type="submit" name='sqladvice' class="btn btn-danger" value="1">查询sqladvisor</button>
+
+
+                            </div>
+                    </div>
+
+
+{##}
+{#  <div class="col-md-4 no-padding">#}
+{#                          <div class="box box-solid">#}
+{#                            <div class="box-header with-border">#}
+{#                              <h3 class="box-title text-center">Databases</h3>#}
+{#                            </div>#}
+{#                            <!-- /.box-header -->#}
+{#                            <div class="box-body">#}
+{#                              <div class="box-group" id="accordion">#}
+{#                                <!-- we are adding the .panel class so bootstrap.js collapse plugin detects it -->#}
+{#                                <div class="panel box box-primary">#}
+{#                                  <div class="box-header with-border">#}
+{#                                    <h4 class="box-title">#}
+{#                                      <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" class="collapsed">#}
+{#                                         Group 1#}
+{#                                      </a>#}
+{#                                    </h4>#}
+{#                                  </div>#}
+{#                                  <div id="collapseOne" class="panel-collapse collapse" aria-expanded="false" style="height: 0px;">#}
+{#                                    <div class="box-body">#}
+{#                                     <div id="id_form_read" class="form-group">#}
+{##}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                  </div>#}
+{#                                </div>#}
+{#                                <div class="panel box box-danger">#}
+{#                                  <div class="box-header with-border">#}
+{#                                    <h4 class="box-title">#}
+{#                                      <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" class="collapsed" aria-expanded="false">#}
+{#                                        Group 2#}
+{#                                      </a>#}
+{#                                    </h4>#}
+{#                                  </div>#}
+{#                                  <div id="collapseTwo" class="panel-collapse collapse" aria-expanded="false" style="height: 0px;">#}
+{#                                    <div class="box-body">#}
+{#                                      <div id='id_form_read_write' class="form-group">#}
+{##}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                  </div>#}
+{#                                </div>#}
+{#                                <div class="panel box box-success">#}
+{#                                  <div class="box-header with-border">#}
+{#                                    <h4 class="box-title">#}
+{#                                      <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" class="collapsed" aria-expanded="false">#}
+{#                                        Group 3#}
+{#                                      </a>#}
+{#                                    </h4>#}
+{#                                  </div>#}
+{#                                  <div id="collapseThree" class="panel-collapse collapse " aria-expanded="false">#}
+{#                                    <div class="box-body">#}
+{#                                       <div id="id_form_all" class="form-group">#}
+{##}
+{#                                      </div>#}
+{#                                    </div>#}
+{#                                  </div>#}
+{#                                </div>#}
+{#                              </div>#}
+{#                            </div>#}
+{#                            <!-- /.box-body -->#}
+{#                          </div>#}
+{#                          <!-- /.box -->#}
+{#                        </div>#}
+             <div class="col-md-4 no-padding"   >
+                          <div class="box box-solid">
+                            <div class="box-header with-border">
+                              <h4 class="box-title text-center">Databases</h4>
+                            </div>
+                            <!-- /.box-header -->
+                            <div class="box-body">
+                              <div class="box-group" id="accordion">
+                                <div class="panel box box-primary">
+                                  <div id="collapseOne" class="panel-collapse collapse" aria-expanded="false" style="height: 0;">
+                                     <div id="id_form_read" class="form-group">
+                                     </div>
+                                  </div>
+                                </div>
+                                <div class="panel box box-danger">
+                                  <div id="collapseTwo" class="panel-collapse collapse" aria-expanded="false" style="height: 0;">
+                                      <div id='id_form_read_write' class="form-group">
+                                      </div>
+                                  </div>
+                                </div>
+                                <div class="panel box box-success">
+                                  <div id="collapseThree" class="panel-collapse collapse " aria-expanded="false" style="height: 0;">
+                                       <div id="id_form_all" class="form-group">
+                                      </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- /.box-body -->
+                          </div>
+                          <!-- /.box -->
+                        </div>
+                <div class="col-md-4 main">
+                    <div class="col-md-12">
+                                    <h3>查询注意事项:</h3>
+
+                                    <p class="bg-danger"> 1. 支持单条语句查询，在框中输入多条sql语句默认只识别第一条合规语句</p>
+                                    <p> 2. 平台默认查询和导出限制都是200行
+                                    <p> 3. 增加查询或导出数据行数限制，需提需求给DBA开通权限</p>
+                                    <p> 4. 查看表结构语句如:show create table (dbname.)tablename</p>
+                                    <p> 5. 查看表结构语句如:desc (dbname.)tablename或者show fields in (dbname.)tablename</p>
+                                    <p> 6. 查看执行计划可以直接点击按钮或者输入"explain (extended) select..."然后点击提交</p>
+                                    <p> 7. 查看库中的表名如: show tables (in dbname)</p>
+                                    <p> 8. 查看所有的库名如: show databases</p>
+                                    <p class="bg-danger"> 9. 导出CSV文件为GBK编码格式</p>
+                                </div>
+                      <div class="col-md-12 main">
+                            {% if blacktb %}
+                                <br>
+                                <strong><span style="color:red">
+                                {% for item in blacktb %}
+                                    {{ item }} &nbsp;
+                                {% endfor %}
+                                </span>
+                                <br>
+                                语句中包含以上被限制查询的表，请联系平台管理人员
+                                </strong>
+                            {% endif %}
+                            {% if advice %}
+                                <table>
+                                    <th> ADVICE: </th>
+                                    <tr>
+                                        <td>
+                                            <pre>  {{ advice|linebreaksbr }}</pre>
+                                        </td>
+                                    </tr>
+                                </table>
+                            {% endif %}
+                            {% if collist %}
+                                <table  class="table table-condensed" border="1">
+                                    <tr class="danger">
+                                        QUERY IN:{{ dbname }}
+                                    </tr>
+                                    <tr>
+                                        {% if a %}
+                                            {#                                {{ a|linebreaks }}#}
+                                            {{ a|truncatechars:100|linebreaks }}
+                                        {% endif %}
+                                    </tr>
+                                </table>
+
+                </div>
+                         </div>
+
+
+            </form >
+
+
+                <div class="col-md-12">
+
+                <table id="mytable" class="table table-condensed" border="1">
+                    <thead>
+                    <tr class="danger">
+                        {% for colname in collist %}
+                            <th>{{ colname }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody  >
+                    {% for item in data_list %}
+                        <tr>
+                            {% for item_detail in item %}
+                                <td> <pre>{{ item_detail }}</pre></td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+            </div>
+        </div>
+{#        {% include "include/sidebar.html" %}#}
+
+
+    </div>
+
+{% block script %}
+{#    {% include "include/pagejump/tabledata.html" %}#}
+
+    <script>
+
+
+
+
+        $("#menu-toggle").click(function(e) {
+            e.preventDefault();
+            $("#wrapper").toggleClass("toggled");
+        });
+        function record_cookie() {
+            var fav = document.getElementById("id_favword");
+            myfav =escape(fav.value);
+            {#            myfav = fav.value.replace(/\n/g,"^");#}
+            var expires = new Date();
+            expires.setTime(expires.getTime() + 3500000);
+            pathstr = ';path=/';
+            {#            alert(myfav);#}
+            document.cookie = "myfavword"+"="+myfav+pathstr+';expires='+expires.toGMTString();
+        }
+
+        function showfav() {
+            var fav = document.getElementById("id_favword");
+            myfav =unescape(fav.value);
+            fav.value = myfav;
+        }
+    </script>
+
+
+
+{% endblock %}
+
+
+    <script>
+    function add_dbs(flag){
+        selected_group = $("#id_select_"+flag).val();
+        $("#id_select_read").parent().css({"border":""});
+        $("#id_select_read_write").parent().css({"border":""});
+        $("#id_select_all").parent().css({"border":""});
+        $("#id_select_read").attr('disabled',true);
+        $("#id_select_read_write").attr('disabled',true);
+        $("#id_select_all").attr('disabled',true);
+        $('select[multiple="multiple"]').multiselect('refresh');
+        $("#id_select_read_write").find("option:selected").attr('selected',false);
+        $("#id_select_all").find("option:selected").attr('selected',false);
+        $("#id_select_"+flag).parent().css({"border":"2px solid red"});
+        $("#id_select_"+flag).attr('disabled',false);
+
+
+    }
+
+function change_host(flag) {
+
+
+    var select_host = $("#select_host");
+    var instance_id = select_host.val();
+
+    $("#id_form_read").empty();
+    $("#id_form_read_write").empty();
+    $("#id_form_all").empty();
+
+    $("#collapseOne").collapse('show');
+    $("#collapseTwo").collapse('show');
+    $("#collapseThree").collapse('show');
+    if (instance_id === null){
+        instance_id = "{{ select_host }}"
+    }
+
+    $.getJSON('/dbmanage/meta_data/', {'instance_id': instance_id}, function (ret) {
+
+        $.each(ret, function(key,value){
+            v = value.db_account_id
+            var text = value.db_name+' ['+value.db_tag+']';
+
+                var html =  '<div class="radio"> \
+                             <label> \
+                             <input type="radio" name="optionsRadios" id="optionsRadios'+key+'" value="'+v+':'+value.db_name+'" > \
+                               '+text+'\
+                            </label> \
+                          </div>'
+
+            $('#id_form_'+value.db_account_role).append(html);
+        });
+        var select_db_name = "{{ db_name|default_if_none:'0' }}"
+        var select_db_account_id = "{{ db_account.id|default_if_none:'0' }}"
+        console.log(select_db_name,select_db_account_id)
+        if ( select_db_name !== 0 && select_db_account_id !== 0 && flag === -1){
+            var r = document.getElementsByName('optionsRadios')
+            for (var i=0;i<r.length;i++){
+                if ($("#"+r[i].id).val() === select_db_account_id+':'+select_db_name){
+                     $("#"+r[i].id).attr("checked",true);
+{#                     $("#"+r[i].id).parent().parent().parent().parent().parent().collapse('show');#}
+                }
+            }
+
+        }else{
+            var d =  document.getElementsByName('optionsRadios');
+            for (var i=0;i<1;i++){
+               $("#"+d[i].id).attr("checked",true);
+{#               $("#"+d[i].id).parent().parent().parent().parent().parent().collapse('show');#}
+{#                console.log()#}
+
+        }
+        }
+
+    })
+}
+
+
+function change_group(flag,selected_group,selected_host) {
+
+    var host_group = selected_group;
+    if (flag == -1) {
+        host_group = $("#id_select_group option:selected").val();
+    }
+{#    console.log(selected_group,selected_host)#}
+    var select_host = $("#select_host");
+    $(select_host).empty();
+    $(select_host).append('<option  id="select_host" value ="" selected disabled >---Select Host---</option>');
+
+    $.ajax({
+        url: '/dbmanage/meta_data/',
+        data: {'host_group': host_group},
+        success: function (ret) {
+            $.each(ret ,function(key,value){
+
+                var id = value.id;
+                var text = value.ip+":"+value.port+' '+value.explain;
+                if (id === selected_host){$(select_host).append('<option selected  value ="'+id+'" >'+text+'</option>')}
+                else{$(select_host).append('<option  value ="'+id+'" >'+text+'</option>')}
+            })
+        }
+    })
+}
+
+
+    </script>
+
+
+    <script>
+
+    change_group(-2,{{ select_group|default:0 }},{{ select_host }});
+    change_host(-1)
+
+
+</script>
+<script type="text/javascript">
+//根据DOM元素的id构造出一个编辑器
+    var editor=CodeMirror.fromTextArea(document.getElementById("code"),{
+                mode:"text/x-sql", //实现Java代码高亮
+                lineNumbers:true,
+                theme:"dracula",
+                keyMap: "sublime",
+                extraKeys:{"Ctrl":"autocomplete"},
+                hint: CodeMirror.hint.sql,
+                lineWrapping: true,         //是否换行
+                foldGutter: true,           //是否折叠
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"], //添加行号栏，折叠栏
+
+    });
+
+    editor.setSize('height','262px');
+     // 最小高度
+     const MIN_HEIGHT = 260;
+
+    //对编辑器这个node添加鼠标事件
+    var editorNode = document.getElementById('code');
+
+    var hahahha = document.getElementsByClassName('CodeMirror-wrap')[0];
+    console.log('初始值：' + hahahha.offsetHeight);
+    //
+    var dragBar = document.getElementById('handle');
+
+     // 返回编辑器的高度
+     function  getHeight(node){
+         let h =  window.getComputedStyle(node, null).height.replace(/px$/, "");
+         if(h === 'auto'){
+             h = node.offsetHeight;
+         }
+         return parseInt(h);
+     }
+
+     // 释放鼠标的时候触发的事件
+     function release(){
+
+        console.log('end');
+        // 删除和添加都是使用两个参数的
+        document.body.removeEventListener('mousemove', drag);
+        window.removeEventListener('mouseup', release);
+     }
+
+     // drag 事件
+     function drag(e){
+         console.log('drag');
+         console.log('e.y:' + e.y);
+         console.log('pos_y:' + pos_y);
+         console.log('startHeight:' + startHeight);
+         console.log('-----------')
+         console.log(startHeight + e.y - pos_y);
+         editor.setSize('height', Math.max(MIN_HEIGHT, (startHeight + e.y - pos_y)) + "px");
+     }
+
+    dragBar.addEventListener('mousedown', function (e){
+        console.log('start');
+        // 开始高度
+        startHeight =  getHeight(hahahha);
+        console.log('开始高度：' + startHeight);
+        pos_x = e.x;
+        pos_y = e.y;
+        //只有按下鼠标移动的时候才能移动
+        document.body.addEventListener('mousemove', drag);
+        window.addEventListener('mouseup', release);
+    });
+
+
+    function getSelectedRange() {
+        return { from: editor.getCursor(true), to: editor.getCursor(false) };
+    }
+
+    //代码的格式化
+    function autoFormatSelection() {
+        // 获取输入的值
+        console.log(editor.getValue());
+        console.log('123');
+        console.log('范围：' + JSON.stringify(getSelectedRange()));
+        var range = getSelectedRange();
+        editor.autoFormatRange(range.from, range.to);
+
+        function format() {
+                console.time('formatting');
+
+                let str = sqlFormatter.format(editor.getValue(), {language: 'sql'});
+                editor.setValue(str);
+                console.log('格式化的代码:' + str);
+                console.timeEnd('formatting');
+            }
+            format();
+    }
+
+    var formatButton = document.getElementById('format');
+    formatButton.addEventListener('click',autoFormatSelection);
+
+</script>
+    <script>
+    $("#mytable").dataTable({
+
+    })
+    </script>
+{% endblock %}
+

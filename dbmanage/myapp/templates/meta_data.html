@@ -1,0 +1,725 @@
+{% extends "include/base.html" %}
+{% block title %}
+    <title>META_DATA</title>
+{% endblock %}
+{% block name %}
+    欢迎使用MySQL数据库<span style="color:red">表结构查询</span>功能
+{% endblock %}
+{%block db_content%}
+    <div id="wrapper">
+        <form role="form" method='post'>
+            {% csrf_token %}
+{#            {% include "include/sidebar.html" %}#}
+            <div id="page-content-wrapper">
+
+
+                    CHOOSE :
+                     <div class="col-md-12 main no-padding">
+                        <div class="col-md-5 no-padding">
+                             <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host|default:0 }}')" class="form-control col-md-12"  name = "select_group">
+                                <option value ="" selected disabled >---Select Host Group---</option>
+                                    {% for group in host_group %}
+                                        {% if group.id == select_group %}
+                                            <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                        {% else %}
+                                            <option value ="{{ group.id }}">{{ group.name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                            </select>
+
+                            <select  id="select_host" onchange="change_host(1)" class="form-control col-md-12" name = "ins_set">
+                                <option value ="" selected disabled >---Select Host ---</option>
+                            </select>
+                        <button type="submit" name='query' class="btn btn-info" value="1">搜索表</button >
+                        </div>
+
+              <div class="col-md-4 no-padding"   >
+                          <div class="box box-solid">
+                            <div class="box-header with-border">
+                              <h4 class="box-title text-center">Databases</h4>
+                            </div>
+                            <!-- /.box-header -->
+                            <div class="box-body">
+                              <div class="box-group" id="accordion">
+                                <div class="panel box box-primary">
+                                  <div id="collapseOne" class="panel-collapse collapse" aria-expanded="false" style="height: 0;">
+                                     <div id="id_form_read" class="form-group">
+                                     </div>
+                                  </div>
+                                </div>
+                                <div class="panel box box-danger">
+                                  <div id="collapseTwo" class="panel-collapse collapse" aria-expanded="false" style="height: 0;">
+                                      <div id='id_form_read_write' class="form-group">
+                                      </div>
+                                  </div>
+                                </div>
+                                <div class="panel box box-success">
+                                  <div id="collapseThree" class="panel-collapse collapse " aria-expanded="false" style="height: 0;">
+                                       <div id="id_form_all" class="form-group">
+                                      </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- /.box-body -->
+                          </div>
+                          <!-- /.box -->
+                        </div>
+                    </div>
+
+
+
+
+
+
+
+
+{#                            {% if table_se %}#}
+{#                                <input type="text" class="form-control" maxlength="30" placeholder="search for table_name" value="{{ table_se }}" name="searchname">#}
+{#                            {% else %}#}
+{#                                <input type="text" class="form-control" maxlength="30" placeholder="search for table_name" name="searchname">#}
+{##}
+{#                            {% endif %}#}
+
+
+
+                {% if sh_cre %}
+                    <strong> <span style="color:red">{{ dbname }}.{{ tbname }} definition:</span></strong>
+                    <table id="tb" class="table table-condensed" border="1">
+                        <thead>
+                        <tr class="danger">
+                            {% for colname in sh_cre_col %}
+                                <th>{{ colname }}</th>
+                            {% endfor %}
+
+                        </tr>
+                        </thead>
+                        <tbody  >
+                        {% for item in sh_cre %}
+                            <tr>
+                                {% for item_detail in item %}
+                                    <td> {{ item_detail|linebreaks }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
+
+                {% if tbst %}
+                    <strong> <span style="color:red">{{ dbname }}.{{ tbname }} STATUS:</span></strong>
+                    <table id="tb" class="table table-condensed" border="1">
+                        {#                        <thead>#}
+                        {#                        <tr class="danger">#}
+                        {#                            {% for colname in tbst_col %}#}
+                        {#                                <th>{{ colname }}</th>#}
+                        {#                            {% endfor %}#}
+                        {#                        </tr>#}
+                        {#                        </thead>#}
+                        <tbody  >
+                        {% for item in tbst %}
+                            <tr>
+                                <td>TABLE_NAME</td>
+                                <td> {{ item.2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>TABLE_TYPE</td>
+                                <td> {{ item.3 }}</td>
+                            </tr>
+                            <tr>
+                                <td>ENGINE</td>
+                                <td> {{ item.4 }}</td>
+                            </tr>
+                            <tr>
+                                <td>ROW_FORMAT</td>
+                                <td> {{ item.6 }}</td>
+                            </tr>
+                            <tr>
+                                <td>TABLE_ROWS</td>
+                                <td> {{ item.7 }}</td>
+                            </tr>
+                            <tr>
+                                <td>AVG_ROW_LENGTH</td>
+                                <td> {{ item.8 }}</td>
+                            </tr>
+                            <tr>
+                                <td>DATA_LENGTH</td>
+                                <td> {{ item.9 }}</td>
+                            </tr>
+                            <tr>
+                                <td>MAX_DATA_LENGTH</td>
+                                <td> {{ item.10 }}</td>
+                            </tr>
+                            <tr>
+                                <td>INDEX_LENGTH</td>
+                                <td> {{ item.11 }}</td>
+                            </tr>
+                            <tr>
+                                <td>DATA_FREE</td>
+                                <td> {{ item.12 }}</td>
+                            </tr>
+                            <tr>
+                                <td>AUTO_INCREMENT</td>
+                                <td> {{ item.13 }}</td>
+                            </tr>
+                            <tr>
+                                <td>CREATE_TIME</td>
+                                <td> {{ item.14|date:"Y-m-d H:i:s" }}</td>
+                            </tr>
+                            <tr>
+                                <td>UPDATE_TIME</td>
+                                <td> {{ item.15|date:"Y-m-d H:i:s" }}</td>
+                            </tr>
+                            <tr>
+                                <td>CHECK_TIME</td>
+                                <td> {{ item.16|date:"Y-m-d H:i:s" }}</td>
+                            </tr>
+                            <tr>
+                                <td>TABLE_COLLATION</td>
+                                <td> {{ item.17 }}</td>
+                            </tr>
+                            <tr>
+                                <td>CHECK_OPTIONS</td>
+                                <td> {{ item.19 }}</td>
+                            </tr>
+                            <tr>
+                                <td>TABLE_COMMENT</td>
+                                <td> {{ item.20 }}</td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
+                {% if field %}
+                    <strong> <span style="color:red">COLUMNS IN {{ dbname }}.{{ tbname }}:</span></strong>
+                    <table id="tb" class="table table-condensed" border="1">
+                        <thead>
+                        <tr class="danger">
+                            {% for colname in col %}
+                                <th>{{ colname }}</th>
+                            {% endfor %}
+
+                        </tr>
+                        </thead>
+                        <tbody  >
+                        {% for item in field %}
+                            <tr>
+                                {% for item_detail in item %}
+                                    <td> {{ item_detail }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
+                {% if ind_data %}
+                    <strong> <span style="color:red">INDEXES IN {{ dbname }}.{{ tbname }}:</span></strong>
+                    <table id="tb" class="table table-condensed" border="1">
+                        <thead>
+                        <tr class="danger">
+                            {% for colname in ind_col %}
+                                <th>{{ colname }}</th>
+                            {% endfor %}
+
+                        </tr>
+                        </thead>
+                        <tbody  >
+                        {% for item in ind_data %}
+                            <tr>
+                                {% for item_detail in item %}
+                                    <td> {{ item_detail }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            <div id="tablesize">
+                <div class="row">
+                    <div class="col-xs-6 col-md-6 main">
+                        <div id="main" style="width: 100%;height:400px;"></div>
+                    </div>
+                    <div class="col-xs-6 col-md-6 main">
+                        <div id="main15" style="width: 100%;height:400px;"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-md-12 main">
+                        <div id="main30" style="width: 100%;height:400px;"></div>
+                    </div>
+
+                </div>
+            </div>
+            <br>
+                {% if data_list %}
+                    <strong> <span style="color:red">TABLES IN {{ dbname }}:</span></strong>
+                    {% include "include/pagejump/pagebutton.html" %}
+                    <table id="mytable" class="table table-condensed" border="1">
+                        <thead>
+                        <tr class="danger">
+                            <th>ID</th>
+                            {% for colname in collist %}
+                                <th>{{ colname }}</th>
+                            {% endfor %}
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody  >
+                        {% for item in data_list %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                {% for item_detail in item %}
+                                    {% if forloop.counter == 1 %}
+                                        {#                                        <td> <a href="{% url 'tb_inc_status' %}?dbtag={{ choosed_host }}&tbname={{ item_detail }}">{{ item_detail }}</a></td>#}
+                                        <td class="tbstatus info"> <input hidden value="{{ db_name }}:{{ db_account.id  }}"> <u>{{ item_detail }} </u> </td>
+
+                                    {% else %}
+                                        <td> {{ item_detail }}</td>
+                                    {% endif %}
+
+                                {% endfor %}
+                                <td><button type="submit" name='structure' value="{{ item.0 }}" class="btn btn-warning" >查看表结构</button></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
+            </div>
+
+        </form >
+
+    </div>
+
+
+
+{% endblock %}
+
+{% block script %}
+       <script>
+function change_host(flag) {
+
+
+    var select_host = $("#select_host");
+    var instance_id = select_host.val();
+
+    $("#id_form_read").empty();
+    $("#id_form_read_write").empty();
+    $("#id_form_all").empty();
+
+    $("#collapseOne").collapse('show');
+    $("#collapseTwo").collapse('show');
+    $("#collapseThree").collapse('show');
+    if (instance_id === null){
+        instance_id = "{{ select_host }}"
+    }
+
+    $.getJSON('/dbmanage/mysql_query/', {'instance_id': instance_id}, function (ret) {
+
+        $.each(ret, function(key,value){
+            v = value.db_account_id
+            var text = value.db_name+' ['+value.db_tag+']';
+
+                var html =  '<div class="radio"> \
+                             <label> \
+                             <input type="radio" name="optionsRadios" id="optionsRadios'+key+'" value="'+v+':'+value.db_name+'" > \
+                               '+text+'\
+                            </label> \
+                          </div>'
+
+            $('#id_form_'+value.db_account_role).append(html);
+        });
+        var select_db_name = "{{ db_name|default_if_none:'0' }}"
+        var select_db_account_id = "{{ db_account.id|default_if_none:'0' }}"
+        console.log(select_db_name,select_db_account_id)
+        if ( select_db_name !== 0 && select_db_account_id !== 0 && flag === -1){
+            var r = document.getElementsByName('optionsRadios')
+            for (var i=0;i<r.length;i++){
+                if ($("#"+r[i].id).val() === select_db_account_id+':'+select_db_name){
+                     $("#"+r[i].id).attr("checked",true);
+{#                     $("#"+r[i].id).parent().parent().parent().parent().parent().collapse('show');#}
+                }
+            }
+
+        }else{
+            var d =  document.getElementsByName('optionsRadios');
+            for (var i=0;i<1;i++){
+               $("#"+d[i].id).attr("checked",true);
+{#               $("#"+d[i].id).parent().parent().parent().parent().parent().collapse('show');#}
+{#                console.log()#}
+
+        }
+        }
+
+    })
+}
+
+
+function change_group(flag,selected_group,selected_host) {
+
+    var host_group = selected_group;
+    if (flag == -1) {
+        host_group = $("#id_select_group option:selected").val();
+    }
+{#    console.log(selected_group,selected_host)#}
+    var select_host = $("#select_host");
+    $(select_host).empty();
+    $(select_host).append('<option  id="select_host" value ="" selected disabled >---Select Host---</option>');
+
+    $.ajax({
+        url: '/dbmanage/mysql_query/',
+        data: {'host_group': host_group},
+        success: function (ret) {
+            $.each(ret ,function(key,value){
+
+                var id = value.id;
+                var text = value.ip+":"+value.port+' '+value.explain;
+                if (id === selected_host){$(select_host).append('<option selected  value ="'+id+'" >'+text+'</option>')}
+                else{$(select_host).append('<option  value ="'+id+'" >'+text+'</option>')}
+            })
+        }
+    })
+}
+
+
+
+    </script>
+
+
+    <script>
+
+    change_group(-2,{{ select_group|default:0 }},{{ select_host }});
+    change_host(-1)
+
+
+
+</script>
+
+    {% include "include/pagejump/pagejump.html" %}
+    {#    {% include "include/pagejump/tabledata.html" %}#}
+
+    <script>
+
+        $("#menu-toggle").click(function(e) {
+            e.preventDefault();
+            $("#wrapper").toggleClass("toggled");
+        });
+        function record_cookie() {
+            var fav = document.getElementById("id_favword");
+            myfav =escape(fav.value);
+            {#            myfav = fav.value.replace(/\n/g,"^");#}
+            var expires = new Date();
+            expires.setTime(expires.getTime() + 3500000);
+            pathstr = ';path=/';
+            {#            alert(myfav);#}
+            document.cookie = "myfavword"+"="+myfav+pathstr+';expires='+expires.toGMTString();
+        }
+
+        function showfav() {
+            var fav = document.getElementById("id_favword");
+            myfav =unescape(fav.value);
+            fav.value = myfav;
+        }
+    </script>
+
+{#        <script>#}
+{#            $(document).ready(function(){#}
+{#                $('.tbstatus').click(function(){#}
+{#                    var dbtag ="{{ choosed_host }}";#}
+{#                    var tbname = $(this).text();#}
+{##}
+{#                    $.getJSON("{% url 'tb_inc_status' %}",{'dbtag':dbtag,'tbname':tbname},function(ret){#}
+{#                        $.each(ret,function(i,n){#}
+{##}
+{#                        })#}
+{#                    })#}
+{#                })#}
+{#            });#}
+{#        </script>#}
+{##}
+{##}
+{#        <script>#}
+{#        7day status#}
+{#            $(document).ready(function(){#}
+{#                $('#main').hide();#}
+{#                $('.tbstatus').click(function(){#}
+{#                    $('#main').show();#}
+{#                    var dbtag = "{{ choosed_host }}";#}
+{#                    var tbname = $(this).text();#}
+{#                    var myChart = echarts.init(document.getElementById('main'));#}
+{#                    // 显示标题，图例和空的坐标轴#}
+{#                    myChart.setOption({#}
+{#                        title: {#}
+{#                            text: '',#}
+{#                            left:'10%'#}
+{#                        },#}
+{#                        tooltip: {},#}
+{#                        legend: {#}
+{#                            data:['表占用空间(MB)'],#}
+{#                            right:'10%'#}
+{#                        },#}
+{#                        xAxis: {#}
+{#                            data: []#}
+{#                        },#}
+{#                        yAxis: {},#}
+{#                        series: [{#}
+{#                            name: '表占用空间(MB)',#}
+{#                            type: 'bar',#}
+{#                            data: []#}
+{#                        }]#}
+{#                    });#}
+{#                    $.get("{% url 'tb_inc_status' %}",{'dbtag':dbtag,'tbname':tbname}).done(function (data) {#}
+{#                        // 填入数据#}
+{#                        myChart.setOption({#}
+{#                            title: {#}
+{#                                text: dbtag+'.'+tbname#}
+{#                            },#}
+{#                            xAxis: {#}
+{#                                data: data.xaxis#}
+{#                            },#}
+{#                            series: [{#}
+{#                                // 根据名字对应到相应的系列#}
+{#                                name: '表占用空间(MB)',#}
+{#                                type: 'bar',#}
+{#                                itemStyle: {#}
+{#                                    normal: {#}
+{#                                        color: new echarts.graphic.LinearGradient(#}
+{#                                                0, 0, 0, 1,#}
+{#                                                [#}
+{#                                                    {offset: 0, color: '#83bff6'},#}
+{#                                                    {offset: 0.5, color: '#188df0'},#}
+{#                                                    {offset: 1, color: '#188df0'}#}
+{#                                                ]#}
+{#                                        )#}
+{#                                    },#}
+{#                                    emphasis: {#}
+{#                                        color: new echarts.graphic.LinearGradient(#}
+{#                                                0, 0, 0, 1,#}
+{#                                                [#}
+{#                                                    {offset: 0, color: '#2378f7'},#}
+{#                                                    {offset: 0.7, color: '#2378f7'},#}
+{#                                                    {offset: 1, color: '#83bff6'}#}
+{#                                                ]#}
+{#                                        )#}
+{#                                    }#}
+{#                                },#}
+{#                                data: data.yaxis#}
+{#                            }]#}
+{#                        });#}
+{#                    });#}
+{#                })#}
+{#            });#}
+{#        </script>#}
+
+
+{#        30day status#}
+    <script>
+        $("#tablesize").click(function(){
+            $(this).hide()
+        });
+        $(document).ready(function(){
+
+            $('#main').hide();
+            $('#main15').hide();
+            $('#main30').hide();
+
+            $('.tbstatus').click(function(){
+                $("#tablesize").show();
+                $('#main').show();
+                $('#main15').show();
+                $('#main30').show();
+{#                var dbtag = "{{ choosed_host }}";#}
+                var tbname = $(this).text();
+                var dbflag = "{{ db_name }}" + ':' + "{{ db_account.id }}";
+
+                var myChart = echarts.init(document.getElementById('main'));
+                var myChart15 = echarts.init(document.getElementById('main15'));
+                var myChart30 = echarts.init(document.getElementById('main30'));
+                // 显示标题，图例和空的坐标轴
+                myChart.setOption({
+                    title: {
+                        text: '',
+                        left:'5%'
+                    },
+                    tooltip: {},
+                    legend: {
+                        data:['表占用空间(MB)'],
+                        right:'10%'
+                    },
+                    xAxis: {
+                        data: []
+                    },
+                    yAxis: {},
+                    series: [{
+                        name: '表占用空间(MB)',
+                        type: 'bar',
+                        data: []
+                    }]
+                });
+
+                myChart15.setOption({
+                    title: {
+                        text: '',
+                        left:'10%'
+                    },
+                    tooltip: {},
+                    legend: {
+                        data:['表占用空间(MB)'],
+                        right:'10%'
+                    },
+                    xAxis: {
+                        data: []
+                    },
+                    yAxis: {},
+                    series: [{
+                        name: '表占用空间(MB)',
+                        type: 'bar',
+                        data: []
+                    }]
+                });
+
+                myChart30.setOption({
+                    title: {
+                        text: '',
+                        left:'10%'
+                    },
+                    tooltip: {},
+                    legend: {
+                        data:['表占用空间(MB)'],
+                        right:'10%'
+                    },
+                    xAxis: {
+                        data: []
+                    },
+                    yAxis: {},
+                    series: [{
+                        name: '表占用空间(MB)',
+                        type: 'bar',
+                        data: []
+                    }]
+                });
+                console.log(dbflag)
+                $.get("{% url 'tb_inc_status' %}",{'dbflag':dbflag,'tbname':tbname}).done(function (data) {
+                    // 填入数据
+                    myChart.setOption({
+                        title: {
+                            text:  dbtag+'.'+tbname
+                        },
+                        xAxis: {
+                            data: data.xaxis7
+                        },
+                        series: [{
+                            // 根据名字对应到相应的系列
+                            name: '表占用空间(MB)',
+                            type: 'bar',
+                            itemStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(
+                                            0, 0, 0, 1,
+                                            [
+                                                {offset: 0, color: '#ffd306'},
+                                                {offset: 0.5, color: '#ffffaa'},
+                                                {offset: 1, color: '#ffffaa'}
+                                            ]
+                                    )
+                                },
+{#                                emphasis: {#}
+{#                                    color: new echarts.graphic.LinearGradient(#}
+{#                                            0, 0, 0, 1,#}
+{#                                            [#}
+{#                                                {offset: 0, color: '#2378f7'},#}
+{#                                                {offset: 0.7, color: '#2378f7'},#}
+{#                                                {offset: 1, color: '#83bff6'}#}
+{#                                            ]#}
+{#                                    )#}
+{#                                }#}
+                            },
+                            data: data.yaxis7
+                        }]
+                    });
+
+
+                    myChart15.setOption({
+                        title: {
+                            text: tbname + 'in last 15 days '
+                        },
+                        xAxis: {
+                            data: data.xaxis15
+                        },
+                        series: [{
+                            // 根据名字对应到相应的系列
+                            name: '表占用空间(MB)',
+                            type: 'bar',
+                            itemStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(
+                                            0, 0, 0, 1,
+                                            [
+                                                {offset: 0, color: '#83bff6'},
+                                                {offset: 0.5, color: '#188df0'},
+                                                {offset: 1, color: '#188df0'}
+                                            ]
+                                    )
+                                },
+                                emphasis: {
+                                    color: new echarts.graphic.LinearGradient(
+                                            0, 0, 0, 1,
+                                            [
+                                                {offset: 0, color: '#2378f7'},
+                                                {offset: 0.7, color: '#2378f7'},
+                                                {offset: 1, color: '#83bff6'}
+                                            ]
+                                    )
+                                }
+                            },
+                            data: data.yaxis15
+                        }]
+                    });
+
+                    myChart30.setOption({
+                        title: {
+                            text: tbname + 'in last 30 days '
+                        },
+                        xAxis: {
+                            data: data.xaxis30
+                        },
+                        series: [{
+                            // 根据名字对应到相应的系列
+                            name: '表占用空间(MB)',
+                            type: 'bar',
+                            itemStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(
+                                            0, 0, 0, 1,
+                                            [
+                                                {offset: 0, color: '#b15bff'},
+                                                {offset: 0.5, color: '#d3a4ff'},
+                                                {offset: 1, color: '#d3a4ff'}
+                                            ]
+                                    )
+                                },
+{#                                emphasis: {#}
+{#                                    color: new echarts.graphic.LinearGradient(#}
+{#                                            0, 0, 0, 1,#}
+{#                                            [#}
+{#                                                {offset: 0, color: '#2378f7'},#}
+{#                                                {offset: 0.7, color: '#2378f7'},#}
+{#                                                {offset: 1, color: '#83bff6'}#}
+{#                                            ]#}
+{#                                    )#}
+{#                                }#}
+                            },
+                            data: data.yaxis30
+                        }]
+                    });
+
+
+                });
+            })
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,364 @@
+{% extends "include/base.html" %}
+{% load cus_filter %}
+{% load staticfiles %}
+{% block title %}
+    <title>监控设置</title>
+{% endblock %}
+{% block name %}
+    Monitor Platform
+{% endblock %}
+{%block db_content%}
+{#    <script>#}
+{#        function openpage(page){#}
+{#            alert(page)#}
+{#            console.log(page);#}
+{#            window.location.replace(page)#}
+{#        }#}
+{#    </script>#}
+     <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}"  media="all">
+{#     <link rel="stylesheet" href="{% static 'plugins/AgileUI/aui-production.min.css' %}">#}
+{#       <link rel="stylesheet" href="{% static 'plugins/AgileUI/default.min.css' %}">#}
+{#    <script src="{% static 'plugins/AgileUI/aui-production.min.js' %}"></script>#}
+
+   <div class="col-md-12 no-padding">
+          <!-- Custom Tabs -->
+          <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                {% if navStatus == "main" or navStatus == null %}
+                    <li class="active"><a href="#tab_1" onclick="openpage('{% url 'mon_set' %}'); return false" data-toggle="tab" aria-expanded="false">Main</a>
+                  {% else %}
+                    <li class=""><a href="#tab_1" onclick="openpage('{% url 'mon_set' %}'); return false" data-toggle="tab" aria-expanded="false">Main</a>
+                {% endif %}
+
+
+{#              <li class=""><a href="#tab_2" data-toggle="tab" aria-expanded="false">Create New Monitor</a></li>#}
+{#              <li class=""><a href="#tab_3" data-toggle="tab" aria-expanded="true">Muti Create Monitor</a></li>#}
+            {% if navStatus == "monitoring" %}
+              <li class="active"><a href="#tab_4" onclick="mysql_status()" data-toggle="tab" aria-expanded="false">Monitoring</a>
+               {% else %}
+                <li class=""><a href="#tab_4" onclick="mysql_status();check_interval()" data-toggle="tab" aria-expanded="false">Monitoring</a>
+              {% endif %}
+
+
+{#                {% if navStatus == "all" %}#}
+{#				    <li id="navbar-all" class="active">#}
+{#                         {% else %}#}
+{#                    <li id="navbar-all">#}
+{#                {% endif %}#}
+{#					 <a href="/dbmanage/archer/allworkflow/?pageNo=0&navStatus=all">全部工单</a>#}
+{#                    <a href="#" onclick="allworkflow('0','all')">全部工单</a>#}
+{#				</li>#}
+{#              <li class="dropdown">#}
+{#                <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">#}
+{#                  Dropdown <span class="caret"></span>#}
+{#                </a>#}
+{#                <ul class="dropdown-menu">#}
+{#                  <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Action</a></li>#}
+{#                  <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Another action</a></li>#}
+{#                  <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Something else here</a></li>#}
+{#                  <li role="presentation" class="divider"></li>#}
+{#                  <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Separated link</a></li>#}
+{#                </ul>#}
+{#              </li>#}
+{#              <li class="pull-right"><a href="#" class="text-muted"><i class="fa fa-gear"></i></a></li>#}
+            </ul>
+            <div class="tab-content">
+                 <div class="tab-pane active" id="tab_1">
+
+                     <form role="form" method='post'>
+            {% csrf_token %}
+    <div class="col-md-12 main no-padding">
+        <div class="col-md-12 main">
+            <button onclick="openpage('{% url 'mon_set' %}'); return false"  class="layui-btn  layui-btn-normal">刷新</button>
+            <button class="layui-btn  layui-btn-normal" type="button" onclick="return tanchu(0)" >
+              <i class="layui-icon">&#xe608;</i> 添加
+            </button>
+
+        </div>
+        <div class="col-md-12 main">
+
+            {% if posts %}
+                <table  id="mytable" class="table table-bordered  ">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>标签</th>
+                        <th>是否监控</th>
+                        <th>IP+PORT</th>
+                        <th>监控LONG SQL</th>
+                        <th>监控ACTIVE SQL</th>
+                        <th>自动kill LONG SQL</th>
+                        <th>监控连接数</th>
+                        <th>监控复制</th>
+                        <th>监控复制延迟</th>
+                        <th>LONG SQL监控阈值(S)</th>
+                        <th>ACTIVE SQL监控阈值</th>
+                        <th>监控账号</th>
+                        <th>发送邮箱</th>
+                        <th colspan="3">Oper</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in posts %}
+                        <tr>
+                            <td>
+                                {{ item.id }}
+                            </td>
+                            <td>
+                                {{ item.tag }}
+                            </td>
+                            <td>
+                                {% if item.monitor == 1 %}
+                                    <span class='label label-info'>ON</span>
+                                {% elif item.monitor == 0 %}
+                                    <span class='badge'>OFF</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ item.instance.ip }}+{{ item.instance.port }}
+                            </td>
+                            <td>
+                                {% if item.check_longsql == 1 %}
+                                    <span class='label label-info'>ON</span>
+                                {% elif item.check_longsql == 0 %}
+                                    <span class='badge'>OFF</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.check_active  == 1 %}
+                                    <span class='label label-info'>ON</span>
+                                {% elif item.check_active  == 0 %}
+                                    <span class='badge'>OFF</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.longsql_autokill  == 1 %}
+                                    <span class='label label-info'>ON</span>
+
+                                {% elif item.longsql_autokill  == 0 %}
+                                    <span class='badge'>OFF</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.check_connections  == 1 %}
+                                    <span class='label label-info'>ON</span>
+                                {% elif item.check_connections  == 0 %}
+                                    <span class='badge'>OFF</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.check_slave  == 1 %}
+                                    <span class='label label-info'>ON</span>
+                                {% elif item.check_slave  == 0 %}
+                                    <span class='badge'>OFF</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.check_delay  == 1 %}
+                                    <span class='label label-info'>ON</span>
+                                {% elif item.check_delay  == 0 %}
+                                    <span class='badge'>OFF</span>
+                                {% endif %}
+                            </td>
+
+                                                  <td>
+                                                        {{ item.longsql_time }}
+                                                    </td>
+                                                    <td>
+                                                        {{ item.active_threshold }}
+                                                    </td>
+                                                    <td>
+                                                        {{ item.account.tags }} + {{ item.account.user }}
+                                                    </td>
+                                                    <td>
+                                                        {{ item.mail_to }}
+                                                    </td>
+                            <td>
+                                <a href="#" onclick="return tanchu('{{ item.id }}')"  title="修改" > <span class="glyphicon glyphicon-edit " ></span> </a>
+                            </td>
+                            <td>
+                             <a onclick="return confirm('PLEASE COMFIRM')" title="删除"  href="{% url 'mon_delete' %}?dbid={{ item.id }}" class=" layui-icon layui-icon-"></a>
+                            </td>
+
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <nav>
+                    <ul class="pager">
+                        {% if posts.has_previous %}
+                            <li class="previous"><a href="?page={{ posts.previous_page_number }}"><span aria-hidden="true">&larr;</span>前一页</a></li>
+                        {% else %}
+                            <li class="previous disabled"><a><span aria-hidden="true">&larr;</span>前一页</a></li>
+                        {% endif %}
+                        <li><a>第{{ posts.number }}页/共{{ posts.paginator.num_pages }}页</a></li>
+                        {% if posts.has_next %}
+                            <li class="next"><a href="?page={{ posts.next_page_number }}">下一页<span aria-hidden="true">&rarr;</span></a></li>
+                        {% else %}
+                            <li class="next disabled"><a>下一页<span aria-hidden="true">&rarr;</span></a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+
+    </div>
+        </form >
+
+              </div>
+
+                 <div class="tab-pane " id="tab_4">
+
+
+                 <div class="col-sm-2 no-padding">
+                      <div class="col-md-3 no-padding">
+                        <button onclick="mysql_status()"  class="btn btn-info">刷新</button>
+                    </div>
+                        <div class="col-sm-3">
+                        <label for="id_interval" style="line-height:2rem;">Interval</label>
+                        </div>
+                      <div class="col-sm-5">
+                     <select id="id_interval" onchange="check_interval()" aria-controls="example1" class="form-control input-sm">
+                         <option value="0" >停止自动刷新</option>
+                            <option value="5" selected>5</option><option value="10">10</option><option value="15">15</option>
+                            <option value="30">30</option>
+                        </select>
+                           </div>
+                   </div>
+
+                    <table  id="mytable" class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th colspan="2" class=""><center>服务器</center></th>
+                            <th colspan="4"><center>基本信息</center></th>
+                            <th colspan="2"><center>线程</center></th>
+                            <th colspan="2"><center>网络</center></th>
+                            <th colspan="2"><center>查询</center></th>
+                            <th ></th>
+                        </tr>
+                        <tr>
+                            <th>ID</th>
+                            <th>主机</th>
+                            <th>连接</th>
+                            <th>角色</th>
+                            <th>运行时间</th>
+                            <th>版本</th>
+                            <th>连接线程数</th>
+                            <th>活动线程数</th>
+                            <th>接收</th>
+                            <th>发送</th>
+                            <th>每秒查询</th>
+                            <th>每秒事务</th>
+                            <th >更新时间</th>
+                        </tr>
+                        </thead>
+                     <tbody id="id-mysql-status-tbody">
+
+                     </tbody>
+                    </table>
+                 <div id="id_pager">
+                    <nav>
+                        <ul class="pager">
+                            {% if posts.has_previous %}
+                                <li class="previous"><a href="?page={{ posts.previous_page_number }}"><span aria-hidden="true">&larr;</span>前一页</a></li>
+                            {% else %}
+                                <li class="previous disabled"><a><span aria-hidden="true">&larr;</span>前一页</a></li>
+                            {% endif %}
+                            <li><a>第{{ posts.number }}页/共{{ posts.paginator.num_pages }}页</a></li>
+                            {% if posts.has_next %}
+                                <li class="next"><a href="?page={{ posts.next_page_number }}">下一页<span aria-hidden="true">&rarr;</span></a></li>
+                            {% else %}
+                                <li class="next disabled"><a>下一页<span aria-hidden="true">&rarr;</span></a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                 </div>
+                <input hidden id="handle_status" value="">
+             </div>
+            </div>
+        </div>
+            <!-- /.tab-content -->
+  </div>
+          <!-- nav-tabs-custom -->
+
+
+
+
+<script>
+
+function mysql_status(){
+   $.getJSON('{% url 'mysql_status' %}',function(ret){
+       var tbody = $("#id-mysql-status-tbody");
+       var pager = $("#id_pager");
+       $(tbody).empty();
+       $(pager).empty();
+       $(tbody).append(ret.tbody_html);
+       $(pager).append(ret.pager_html);
+
+
+   })
+}
+
+function tanchu(n){
+  layer.open({
+  type: 2,
+  title: '新增监控',
+  area: ['1200px', '680px'],
+  shadeClose: false, //点击遮罩关
+  btn: ['关闭'],
+  content: ['/dbmanage/dbmonitor/mon_edit/' + n ],
+  end:function(){
+        var handle_status = $("#handle_status").val();
+        $("#handle_status").val('');
+        if ( handle_status == '1' ) {
+            layer.msg('保存成功！',{
+                icon: 1,
+                time: 1000 //2秒关闭（如果不配置，默认是3秒）
+            },function(){
+                history.go(0);
+            });
+        } else if ( handle_status == '2' ) {
+            $("#handle_status").val('');
+            layer.msg('修改失败！',{
+                icon: 2,
+                time: 1000 //2秒关闭（如果不配置，默认是3秒）
+            },function(){
+                history.go(0);
+            });
+        }
+    }
+  });
+}
+</script>
+    <script>
+
+
+
+
+
+
+var  int = 1;
+
+  function check_interval(){
+        var interval = $("#id_interval").find("option:selected").val();
+        window.clearInterval(int);
+        if (interval !== '0'){
+             int = setInterval(mysql_status,interval*1000);
+        }
+
+{#        console.log(interval);#}
+
+  }
+</script>
+
+
+
+{% endblock %}
+{% block script %}
+
+{% endblock %}

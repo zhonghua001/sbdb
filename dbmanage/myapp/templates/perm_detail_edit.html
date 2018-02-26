@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    {% include 'link_css.html' %}
+    {% include 'head_script.html' %}
+</head>
+<body>
+
+<div class="col-md-10 main" id="perm_edit" >
+     <form class="form-horizontal" action="{% url 'perm_detail_edit' db_database_permission_id %}" method="POST">
+                        {% csrf_token %}
+     <div class="box" >
+
+         <div class="box box-body col-md-12">
+            <div class="form-group col-md-3">
+                <h4><label>Permission:</label></h4>
+
+                {% if permission_has.0 == -1 %}
+
+                    {% for perm in perm_list %}
+                      <div class="checkbox">
+                        <label>
+                          <input type="checkbox" disabled value="{{ perm }}" name="check_box_list">
+                          {{ perm|upper }}
+                        </label>
+                      </div>
+                    {% endfor %}
+                 {% else %}
+                     {% for perm in perm_list %}
+                      <div class="checkbox">
+                        <label>
+                            {% if perm in permission_has %}
+                          <input type="checkbox" checked value="{{ perm }}" name="check_box_list">
+                            {% else %}
+                            <input type="checkbox"  value="{{ perm }}" name="check_box_list">
+                            {% endif %}
+                          {{ perm|upper }}
+                        </label>
+                      </div>
+                    {% endfor %}
+                 {% endif %}
+
+
+        </div>
+           <div class="form-group col-md-7">
+
+                <h4><label>Black Table:</label></h4>
+                <select id="id_black_table" name="black_table" multiple="multiple" style="width:100%;height: 100px;">
+                {% if black_table_has %}
+                    {% for b in black_table_has %}
+                        <option value="{{ b }}">{{ b }}</option>
+                    {% endfor %}
+                {% endif %}
+                </select>
+                <div class="input-group">
+                    <input id="id_black_table_name" type="text" class="form-control" placeholder="DB Name">
+
+                    <div class="input-group-btn">
+                        <button  style="width: 50px" id="id_black_table_add" type="button" class="btn btn-primary btn-flat">Add</button>
+                     <button  style="width: 50px" id="id_black_table_delete" type="button" class="btn btn-primary btn-danger">Del</button>
+
+                    </div>
+                    <!-- /btn-group -->
+                  </div>
+
+            </div>
+         </div>
+          <div class="box-footer">
+                <button type="submit" onclick="fetch_table_name()" class="btn btn-info pull-left center-block" style="width: 120px"><b>保存</b></button>
+          </div>   <!-- /.modal-content -->
+     </div>
+         <input type="text" id="table_name" name="table_name" hidden>
+          <!-- /.modal-dialog -->
+  </form>
+
+
+</div>
+<script>
+    function fetch_table_name(){
+
+        var array = []
+         $("#id_black_table option").each(function(){  //遍历所有option
+          var txt = $(this).val();   //获取option值
+          if(txt!=''){
+               array.push(txt);  //添加到数组中
+
+          }
+          console.log(array)
+        $("#table_name").val(JSON.stringify(array))
+
+    })
+    }
+</script>
+
+    <script type="text/javascript">
+        var index = parent.layer.getFrameIndex(window.name);
+        var success = "{{ status }}";
+        if ( success === '1' ) {
+            parent.$("#handle_status").val('1');
+              parent.layer.close(index);
+        } else if( success === '2' ) {
+            parent.$("#handle_status").val('2');
+            parent.layer.close(index);
+        }
+</script>
+
+<script>
+
+
+function isInList( num, list ) {
+// List is an Array()
+result = false;
+for(i in list) {
+if(num == list[i]) { result = true }
+}
+return result
+}
+   $('#id_black_table_add').click(function () {
+
+      //Get value and make sure it is not null
+      var val = $('#id_black_table_name').val();
+
+      if (val.length == 0) {
+        return
+      }
+      else {
+
+           var l = []
+        $("#id_black_table").find('option').each(function(){  //遍历所有option
+          var txt = $(this).val();   //获取option值
+            l.push(txt)})
+          if(! isInList(val,l)){
+               $("#id_black_table").append('<option value="'+val+'">'+val+'</option>')
+                $('#id_black_table_name').val('') }
+
+              else{return}
+      }
+ })
+
+$('#id_black_table_delete').click(function(){
+{#    console.log($('#id_select_all').find('option:selected').val());#}
+    $('#id_black_table').find('option:selected').remove()
+})
+</script>
+
+</body>
+</html>

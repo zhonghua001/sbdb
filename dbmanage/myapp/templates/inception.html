@@ -1,0 +1,422 @@
+{% extends "include/base.html" %}
+{% load static %}
+{% block title %}
+    <title>TASK_UPLOAD</title>
+{% endblock %}
+{% block name %}
+    欢迎使用MySQL数据库语句审核功能
+
+ <link rel="stylesheet" href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bower_components/bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css' %}">
+        <script src="{% static 'plugins/iCheck/icheck.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+        <script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+{% endblock %}
+{%block db_content%}
+
+    <form role="form" method='post' enctype="multipart/form-data" >
+        {% csrf_token %}
+        <div class="col-md-12 no-padding">
+            <div class="col-md-7">
+                <div class="col-md-12 no-padding">
+                                 <select id="id_select_group" onchange="change_group(-1,{{ select_group|default:0 }},'{{ select_host|default:0 }}')" class="form-control col-md-12"  name = "select_group">
+                                    <option value ="" selected disabled >---Select Host Group---</option>
+                                        {% for group in host_group %}
+                                            {% if group.id == select_group %}
+                                                <option selected="selected" value ="{{ group.id }}">{{ group.name }}</option>
+                                            {% else %}
+                                                <option value ="{{ group.id }}">{{ group.name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                </select>
+
+                                <select  id="select_host" onchange="change_host(1)" class="form-control col-md-12" name = "ins_set">
+                                    <option value ="" selected disabled >---Select Host ---</option>
+                                </select>
+                    </div>
+                <div class="col-md-12 no-padding">
+                        请输入要审核的SQL脚本:<br>
+                                            {{ form.a }} 
+                    <div id="handle">
+                                 <div class="arrow-v">
+                                <svg t="1506317058000" class="icon" style="" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="989" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16"><defs><style type="text/css"></style></defs><path d="M701.259294 726.618353l43.128471 42.044235-232.387765 238.230588-232.387765-238.170353 43.128471-42.044235 159.141647 163.056941 0-755.471059-159.141647 163.117176-43.128471-42.104471 232.387765-238.170353 232.387765 238.170353-43.128471 42.044235-159.141647-163.056941 0 755.531294 159.141647-163.177412z" p-id="990" fill="#fff"></path></svg>
+                                </div>
+                            </div>
+                        <div id="codeRun">
+{#                            <button class="btn btnRun">执行</button>#}
+                            <button type="button" class="btn btn-primary" id='format'>格式化</button>
+                        </div>
+             </div>
+                <div class="col-md-12 no-padding">
+                    <div class="col-md-8 no-padding">
+                           {{ upform.filename }}
+                    </div>
+                    <div class="col-md-4 no-padding text-right">
+                        <button id='send_file' type="submit" name='upload' class="btn btn-warning">脚本上传</button >
+                    </div>
+                   </div>
+                <div class="col-md-12 no-padding">
+    {#                <input type="file" name="filename">#}
+                        <input type="text" maxlength="30" class="form-control" placeholder="执行说明，可选，最多30字" name="specification">
+                        <span class="glyphicon glyphicon-apple" > 提交任务时请选择是否需要备份执行</span>
+                        <select class="form-control"  name="ifbackup">
+                            {% if needbackup %}
+                                {% if needbackup == 1 %}
+                                    <option value=1 selected="selected">需要备份</option>
+                                    <option value=0 >不需要备份</option>
+                                {% elif  needbackup == 0 %}
+                                    <option value=1 >需要备份</option>
+                                    <option value=0 selected="selected">不需要备份</option>
+                                {% endif %}
+                            {% else %}
+                                <option value=1 selected="selected">需要备份</option>
+                                <option value=0 >不需要备份</option>
+                            {% endif %}
+                        </select>
+                        <button type="submit" name='check' class="btn btn-primary">审核</button >
+
+
+                        <button type="submit" data-toggle="tooltip" data-placement="top" title="出现警告、错误都将不会提交" name='addtask' onclick="return confirm('PLEASE COMFIRM')" class="btn btn-primary">普通提交任务</button >
+                        <button type="submit" data-toggle="tooltip" data-placement="top" title="出现警告可以提交，错误不会提交" name='addtask_force' onclick="return confirm('PLEASE COMFIRM')" class="btn btn-danger">强制提交任务</button >
+                </div>
+            </div>
+
+        <div class="col-md-5 no-padding">
+                          <div class="box box-solid">
+                            <div class="box-header with-border">
+                              <h4 class="box-title text-center">Databases</h4>
+                            </div>
+                            <!-- /.box-header -->
+                            <div class="box-body">
+                              <div class="box-group" id="accordion">
+                                <div class="panel box box-primary">
+                                  <div id="collapseOne" class="panel-collapse collapse" aria-expanded="false" style="height: 0;">
+                                     <div id="id_form_write" class="form-group">
+                                     </div>
+                                  </div>
+                                </div>
+                                <div class="panel box box-danger">
+                                  <div id="collapseTwo" class="panel-collapse collapse" aria-expanded="false" style="height: 0;">
+                                      <div id='id_form_read_write' class="form-group">
+                                      </div>
+                                  </div>
+                                </div>
+                                <div class="panel box box-success">
+                                  <div id="collapseThree" class="panel-collapse collapse " aria-expanded="false" style="height: 0;">
+                                       <div id="id_form_all" class="form-group">
+                                      </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- /.box-body -->
+                          </div>
+                          <!-- /.box -->
+                        </div>
+            <div class="col-md-5">
+
+                <h3>查询注意事项:</h3>
+                <p class="bg-danger"> 1. 支持多条语句一起审核</p>
+                <p class="bg-info"> 2. 点击"检查语句"后，如果返回的结果中"errlevel"都为0,则语句没问题,不然请查看"errormessage"中的提示</p>
+                <p class="bg-danger"> 3. 建议在所有的表名前加上库名限定，如dbname.tablename</p>
+                <p class="bg-danger"> 4. 同一张表的DDL和DML语句请拆分成不同的任务提交 </p>
+
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+            </div>
+        </div>
+
+  </form >
+
+<div class="col-md-12">
+    {% if split %}
+        <strong> <span style="color:red">请根据审核提示，拆分任务提交 <br> </span></strong>
+    {% endif %}
+    <span style="color:red">{{ status }}</span>
+    {% if collist %}
+{#        {% include "include/pagejump/pagebutton.html" %}#}
+    {% endif %}
+    <table id="mytable" class="table table-condensed table-striped" border="1">
+        <thead>
+        <tr class="danger">
+            {% for colname in collist %}
+                {% if forloop.counter <= 7 %}
+                    <th>{{ colname }}</th>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody  >
+        {% for item in data_mysql %}
+
+            <tr  class="{% if item.2 == 0 and 'OK' in status|default:'OK' %}
+                             success
+                          {% elif item.2 == 1 %}
+                            warning
+
+                          {% else %}
+                            danger
+                         {% endif %}">
+                {% for item_detail in item %}
+                    {% if forloop.counter <= 7 %}
+                        {% if forloop.counter == 6 %}
+                            <td> {{ item_detail|truncatechars:500|linebreaks}}</td>
+                        {% elif forloop.counter == 5 or forloop.counter == 2 %}
+                            <td> {{ item_detail|linebreaks}}</td>
+                        {% else %}
+                            <td> {{ item_detail }}</td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+{% block script %}
+
+    <script>
+        var send=document.getElementById("send_file");
+        send.onclick=function(){ var file=document.getElementById("id_filename").value;
+        if(file.length<1){ alert('请选择SQL文件'); return false; } }
+
+    </script>
+
+
+    {% include "include/pagejump/pagejump.html" %}
+
+   <script>
+function change_host(flag) {
+
+
+    var select_host = $("#select_host");
+    var instance_id = select_host.val();
+
+    $("#id_form_write").empty();
+    $("#id_form_read_write").empty();
+    $("#id_form_all").empty();
+
+    $("#collapseOne").collapse('show');
+    $("#collapseTwo").collapse('show');
+    $("#collapseThree").collapse('show');
+    if (instance_id === null){
+        instance_id = "{{ select_host }}"
+    }
+
+    $.getJSON('/dbmanage/mysql_exec/', {'instance_id': instance_id}, function (ret) {
+
+        $.each(ret, function(key,value){
+            v = value.db_account_id
+            var text = value.db_name+' ['+value.db_tag+']';
+
+                var html =  '<div class="radio"> \
+                             <label> \
+                             <input type="radio" name="optionsRadios" id="optionsRadios'+key+'" value="'+v+':'+value.db_name+'" > \
+                               '+text+'\
+                            </label> \
+                          </div>'
+
+            $('#id_form_'+value.db_account_role).append(html);
+        });
+        var select_db_name = "{{ db_name|default_if_none:'0' }}"
+        var select_db_account_id = "{{ db_account.id|default_if_none:'0' }}"
+        console.log(select_db_name,select_db_account_id)
+        if ( select_db_name !== 0 && select_db_account_id !== 0 && flag === -1){
+            var r = document.getElementsByName('optionsRadios')
+            for (var i=0;i<r.length;i++){
+                if ($("#"+r[i].id).val() === select_db_account_id+':'+select_db_name){
+                     $("#"+r[i].id).attr("checked",true);
+{#                     $("#"+r[i].id).parent().parent().parent().parent().parent().collapse('show');#}
+                }
+            }
+
+        }else{
+            var d =  document.getElementsByName('optionsRadios');
+            for (var i=0;i<1;i++){
+               $("#"+d[i].id).attr("checked",true);
+{#               $("#"+d[i].id).parent().parent().parent().parent().parent().collapse('show');#}
+{#                console.log()#}
+
+        }
+        }
+
+    })
+}
+
+
+function change_group(flag,selected_group,selected_host) {
+
+    var host_group = selected_group;
+    if (flag == -1) {
+        host_group = $("#id_select_group option:selected").val();
+    }
+{#    console.log(selected_group,selected_host)#}
+    var select_host = $("#select_host");
+    $(select_host).empty();
+    $(select_host).append('<option  id="select_host" value ="" selected disabled >---Select Host---</option>');
+
+    $.ajax({
+        url: '/dbmanage/mysql_exec/',
+        data: {'host_group': host_group},
+        success: function (ret) {
+            $.each(ret ,function(key,value){
+
+                var id = value.id;
+                var text = value.ip+":"+value.port+' '+value.explain;
+                if (id === selected_host){$(select_host).append('<option selected  value ="'+id+'" >'+text+'</option>')}
+                else{$(select_host).append('<option  value ="'+id+'" >'+text+'</option>')}
+            })
+        }
+    })
+}
+
+
+    </script>
+
+
+    <script>
+
+    change_group(-2,{{ select_group|default:0 }},{{ select_host }});
+    change_host(-1)
+
+
+</script>
+<script type="text/javascript">
+//根据DOM元素的id构造出一个编辑器
+    var editor=CodeMirror.fromTextArea(document.getElementById("code"),{
+                mode:"text/x-sql", //实现Java代码高亮
+                lineNumbers:true,
+                theme:"dracula",
+                keyMap: "sublime",
+                extraKeys:{"Ctrl":"autocomplete"},
+                hint: CodeMirror.hint.sql,
+                lineWrapping: true,         //是否换行
+                foldGutter: true,           //是否折叠
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"], //添加行号栏，折叠栏
+
+    });
+
+    editor.setSize('height','262px');
+     // 最小高度
+     const MIN_HEIGHT = 260;
+
+    //对编辑器这个node添加鼠标事件
+    var editorNode = document.getElementById('code');
+
+    var hahahha = document.getElementsByClassName('CodeMirror-wrap')[0];
+    console.log('初始值：' + hahahha.offsetHeight);
+    //
+    var dragBar = document.getElementById('handle');
+
+     // 返回编辑器的高度
+     function  getHeight(node){
+         let h =  window.getComputedStyle(node, null).height.replace(/px$/, "");
+         if(h === 'auto'){
+             h = node.offsetHeight;
+         }
+         return parseInt(h);
+     }
+
+     // 释放鼠标的时候触发的事件
+     function release(){
+
+        console.log('end');
+        // 删除和添加都是使用两个参数的
+        document.body.removeEventListener('mousemove', drag);
+        window.removeEventListener('mouseup', release);
+     }
+
+     // drag 事件
+     function drag(e){
+         console.log('drag');
+         console.log('e.y:' + e.y);
+         console.log('pos_y:' + pos_y);
+         console.log('startHeight:' + startHeight);
+         console.log('-----------')
+         console.log(startHeight + e.y - pos_y);
+         editor.setSize('height', Math.max(MIN_HEIGHT, (startHeight + e.y - pos_y)) + "px");
+     }
+
+    dragBar.addEventListener('mousedown', function (e){
+        console.log('start');
+        // 开始高度
+        startHeight =  getHeight(hahahha);
+        console.log('开始高度：' + startHeight);
+        pos_x = e.x;
+        pos_y = e.y;
+        //只有按下鼠标移动的时候才能移动
+        document.body.addEventListener('mousemove', drag);
+        window.addEventListener('mouseup', release);
+    });
+
+
+    function getSelectedRange() {
+        return { from: editor.getCursor(true), to: editor.getCursor(false) };
+    }
+
+    //代码的格式化
+    function autoFormatSelection() {
+        // 获取输入的值
+        console.log(editor.getValue());
+        console.log('123');
+        console.log('范围：' + JSON.stringify(getSelectedRange()));
+        var range = getSelectedRange();
+        editor.autoFormatRange(range.from, range.to);
+
+        function format() {
+                console.time('formatting');
+
+                let str = sqlFormatter.format(editor.getValue(), {language: 'sql'});
+                editor.setValue(str);
+                console.log('格式化的代码:' + str);
+                console.timeEnd('formatting');
+            }
+            format();
+    }
+
+    var formatButton = document.getElementById('format');
+    formatButton.addEventListener('click',autoFormatSelection);
+
+</script>
+      <script>
+    $("#mytable").dataTable({
+
+    })
+    </script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

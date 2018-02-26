@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block self_head_css_js %}
+
+        <script src="{% static 'bootstrap/js/myfunc.js' %}" rel="stylesheet"></script>
+        <script src="{% static 'bootstrap/js/echarts.min.js' %}" rel="stylesheet"></script>
+        <script type="text/javascript" src="{% static 'jedate/jedate.js' %}"></script>
+        <script type="text/javascript" src="{% static 'jedate/extra.js' %}"></script>
+{#    <script src="/static/layer/layer.js" xmlns="http://www.w3.org/1999/html"></script>#}
+{% endblock %}
+
+{% block content %}
+<script>
+    window.onload=init;
+    function init() {
+        showhide(7);
+    }
+    function showhide(n) {
+        var box = document.getElementById("config");
+        box.className="active";
+    }
+
+        var sidebar_database = document.getElementById('database_menu');
+
+        $(sidebar_database).addClass('active');
+
+
+
+</script>
+
+
+<script>
+function checkSubmit() {
+    if (!confirm("确定修改？")) {
+        window.event.returnValue = false;
+    }
+}
+</script>
+<script>
+function get_token() {
+    $.post('/config/token/',{csrfmiddlewaretoken: '{{ csrf_token }}'},function(data){
+        document.getElementById("token").value = data;
+    });
+}
+</script>
+
+    <script>
+    function change_info(){
+        var args = $("#host_selector").serialize();
+        console.log(args)
+        window.location ='{% url "dbmanage" %}?' + args
+
+    }
+
+     function change_host(){
+        var args = $("#host_selector").serialize();
+        console.log(args)
+        window.location ='{% url "edit_conf" %}?' + args
+
+    }
+    </script>
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+
+    </section>
+
+
+    <section class="content">
+
+        {% include "chart/basechart.html" %}
+
+    </section>
+
+        <!-- /.content -->
+</div>
+
+
+
+
+<script>
+function checkSubmit() {
+    if (!confirm("确定修改？")) {
+        window.event.returnValue = false;
+    }
+}
+</script>
+<script>
+function get_token() {
+    $.post('/config/token/',{csrfmiddlewaretoken: '{{ csrf_token }}'},function(data){
+        document.getElementById("token").value = data;
+    });
+}
+</script>
+
+    <script>
+    function change_info(){
+        var args = $("#host_selector").serialize();
+        console.log(args)
+        window.location ='{% url "dbmanage" %}?' + args
+
+    }
+
+     function change_host(){
+        var args = $("#host_selector").serialize();
+        console.log(args)
+        window.location ='{% url "edit_conf" %}?' + args
+
+    }
+    </script>
+
+{% endblock %}
